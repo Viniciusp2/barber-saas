@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Barbershop" ADD COLUMN     "closingHour" INTEGER NOT NULL DEFAULT 19,
+ADD COLUMN     "openingHour" INTEGER NOT NULL DEFAULT 9;

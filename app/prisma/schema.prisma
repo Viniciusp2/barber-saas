@@ -9,11 +9,15 @@ datasource db {
 
 /// USERS
 model User {
-  id          String        @id @default(cuid())
-  name        String?
-  email       String        @unique
-  image       String?
-  role        Role          @default(USER)
+  id            String        @id @default(cuid())
+  name          String?
+  email         String?       @unique
+  emailVerified DateTime?
+  phone         String?       @unique
+  phoneVerified DateTime?
+  image         String?
+  password      String?
+  role          Role          @default(USER)
 
   barbershops Barbershop[]  @relation("OwnerBarbershop")
   appointments Appointment[]
@@ -32,6 +36,11 @@ model Barbershop {
   address     String?
   phone       String?
   description String?
+
+  /// Hora de abertura (0-23), mesma para todos os dias da semana por enquanto.
+  openingHour Int           @default(9)
+  /// Hora de fechamento (0-23), mesma para todos os dias da semana por enquanto.
+  closingHour Int           @default(19)
 
   ownerId     String
   owner       User          @relation("OwnerBarbershop", fields: [ownerId], references: [id])
@@ -109,8 +118,10 @@ model Account {
   refresh_token     String?
   expires_at        Int?
   token_type        String?
+  scope             String?
+  session_state     String?
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -121,7 +132,7 @@ model Session {
   userId       String
   expires      DateTime
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
@@ -130,6 +141,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+/// Códigos de verificação enviados por WhatsApp para login de clientes sem senha.
+model PhoneOtp {
+  id         String    @id @default(cuid())
+  phone      String
+  code       String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([phone])
 }
 
 /// ENUMS
