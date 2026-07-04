@@ -221,43 +221,43 @@ http://localhost:3000
 
 ## 🏠 Landing Page
 
-![Landing](docs/images/01-landing.png)
+![Landing](docs/img/01-landing.png)
 
 ---
 
 ## 📊 Dashboard
 
-![Dashboard](docs/images/e2e-07-dashboard-final.png)
+![Dashboard](./docs/img/e2e-07-dashboard-final.png)
 
 ---
 
 ## 📅 Agendamento Online
 
-![Booking](docs/images/booking-01-pagina-publica.png)
+![Booking](docs/img/booking-01-pagina-publica.png)
 
 ---
 
 ## 🕒 Escolha de Horário
 
-![Horários](docs/images/booking-02-horarios.png)
+![Horários](docs/img/booking-02-horarios.png)
 
 ---
 
 ## ✂️ Gestão de Serviços
 
-![Serviços](docs/images/e2e-03-servicos-lista.png)
+![Serviços](docs/img/e2e-03-servicos-lista.png)
 
 ---
 
 ## 👥 Gestão da Equipe
 
-![Equipe](docs/images/e2e-05-equipe-lista.png)
+![Equipe](docs/img/e2e-05-equipe-lista.png)
 
 ---
 
 ## ⚙️ Configurações
 
-![Configurações](docs/images/e2e-06-configuracoes.png)
+![Configurações](docs/img/e2e-06-configuracoes.png)
 ---
 
 # 📄 Licença
