@@ -4,6 +4,12 @@
 
 O BarberSaaS foi projetado com foco em **escalabilidade**, **segurança** e **experiência do usuário**, permitindo que cada barbearia gerencie seus serviços, equipe e agendamentos em um ambiente isolado (arquitetura **multi-tenant**).
 
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)
+![Prisma](https://img.shields.io/badge/Prisma-7-2D3748)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791)
+![License](https://img.shields.io/badge/license-MIT-green)
 ---
 
 ## ✨ Principais funcionalidades
