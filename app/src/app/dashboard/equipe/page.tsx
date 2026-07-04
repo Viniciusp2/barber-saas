@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table";
 import { deleteStaff } from "./actions";
 
+const weekDayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
 export default async function EquipePage() {
   const { barbershop } = await requireBarbershop();
 
@@ -48,6 +50,7 @@ export default async function EquipePage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Folga</TableHead>
               <TableHead className="w-0 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -61,6 +64,15 @@ export default async function EquipePage() {
                     </span>
                     {member.name}
                   </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {member.daysOff.length === 0
+                    ? "Nenhum"
+                    : member.daysOff
+                        .slice()
+                        .sort()
+                        .map((day) => weekDayLabels[day])
+                        .join(", ")}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">

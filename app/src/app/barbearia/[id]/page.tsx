@@ -11,14 +11,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { requestOtpAction, verifyOtpAction, createAppointmentAction } from "./actions";
+import { requestMagicLinkAction, createAppointmentAction } from "./actions";
+import { formatPhoneDisplay } from "@/lib/phone-auth";
+import {
+  IconScissors,
+  IconShuffle,
+  IconCalendar,
+  IconClock,
+  IconWhatsapp,
+  IconCheckCircle,
+  IconMapPin,
+} from "./icons";
 
 interface SearchParams {
   serviceId?: string;
   staffId?: string;
   date?: string;
   slot?: string;
-  otp?: string;
+  sent?: string;
   name?: string;
   phone?: string;
   error?: string;
@@ -27,8 +37,8 @@ interface SearchParams {
 
 const errorMessages: Record<string, string> = {
   dados_invalidos: "Preencha nome e telefone.",
-  otp_aguarde: "Aguarde um pouco antes de pedir um novo código.",
-  otp_invalido: "Código inválido ou expirado.",
+  link_aguarde: "Aguarde um pouco antes de pedir um novo link.",
+  link_invalido: "Esse link não é mais válido. Peça um novo.",
   slot_indisponivel: "Esse horário acabou de ser reservado por outra pessoa. Escolha outro.",
 };
 
@@ -41,7 +51,13 @@ function formatTime(date: Date) {
 }
 
 function formatDate(date: Date) {
-  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+  return date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+}
+
+function periodLabel(hour: number) {
+  if (hour < 12) return "Manhã";
+  if (hour < 18) return "Tarde";
+  return "Noite";
 }
 
 function buildLink(barbershopId: string, params: Record<string, string | undefined>) {
@@ -50,6 +66,31 @@ function buildLink(barbershopId: string, params: Record<string, string | undefin
     if (value) search.set(key, value);
   }
   return `/barbearia/${barbershopId}?${search.toString()}`;
+}
+
+function StepBadge({ number, label, state }: { number: number; label: string; state: "done" | "active" | "todo" }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+          state === "done"
+            ? "bg-primary text-primary-foreground"
+            : state === "active"
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-muted-foreground"
+        }`}
+      >
+        {state === "done" ? <IconCheckCircle className="size-4" /> : number}
+      </span>
+      <span
+        className={`hidden text-sm font-medium sm:block ${
+          state === "todo" ? "text-muted-foreground" : "text-foreground"
+        }`}
+      >
+        {label}
+      </span>
+    </div>
+  );
 }
 
 export default async function BarbershopPublicPage({
@@ -76,18 +117,29 @@ export default async function BarbershopPublicPage({
 
   if (sp.success) {
     return (
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-6 text-center">
-        <span className="font-display text-sm font-medium uppercase tracking-[0.2em] text-primary">
-          Tudo certo
-        </span>
-        <h1 className="font-display text-2xl font-semibold">Agendamento confirmado!</h1>
-        <p className="text-muted-foreground">
-          Assim que o barbeiro confirmar, você recebe um aviso. Obrigado por escolher a{" "}
-          {barbershop.name}.
-        </p>
-        <Link href={`/barbearia/${barbershop.id}`}>
-          <Button>Fazer outro agendamento</Button>
-        </Link>
+      <div className="theme-light-forced min-h-screen">
+        <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-6 text-center">
+          <div className="animate-scale-in flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <IconCheckCircle className="size-10" />
+          </div>
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+            <span className="font-display text-sm font-medium uppercase tracking-[0.2em] text-primary">
+              Tudo certo
+            </span>
+            <h1 className="mt-2 font-display text-2xl font-semibold">Agendamento confirmado!</h1>
+            <p className="mt-2 text-muted-foreground">
+              Assim que o barbeiro confirmar, você recebe um aviso. Obrigado por escolher a{" "}
+              {barbershop.name}.
+            </p>
+          </div>
+          <Link
+            href={`/barbearia/${barbershop.id}`}
+            className="animate-fade-in-up"
+            style={{ animationDelay: "0.3s" }}
+          >
+            <Button>Fazer outro agendamento</Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -116,189 +168,317 @@ export default async function BarbershopPublicPage({
     ? barbershop.services.find((s) => s.id === sp.serviceId)
     : undefined;
 
+  const step = selectedSlot && selectedService ? 3 : hasSelection ? 2 : 1;
+
+  const groupedSlots = slots.reduce<Record<string, typeof slots>>((groups, slot) => {
+    const label = periodLabel(slot.start.getHours());
+    (groups[label] ??= []).push(slot);
+    return groups;
+  }, {});
+
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12">
-      <div>
-        <h1 className="font-display text-3xl font-semibold">{barbershop.name}</h1>
-        {barbershop.address && <p className="text-muted-foreground">{barbershop.address}</p>}
-        {barbershop.description && (
-          <p className="mt-2 text-sm text-muted-foreground">{barbershop.description}</p>
+    <div className="theme-light-forced min-h-screen">
+      <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12 md:py-16">
+        <header className="animate-fade-in-up text-center">
+          <span className="font-display text-sm font-medium uppercase tracking-[0.2em] text-primary">
+            Agende seu horário
+          </span>
+          <h1 className="mt-2 font-display text-4xl font-semibold">{barbershop.name}</h1>
+          {(barbershop.address || barbershop.description) && (
+            <div className="mt-3 flex flex-col items-center gap-1 text-sm text-muted-foreground">
+              {barbershop.address && (
+                <span className="flex items-center gap-1.5">
+                  <IconMapPin className="size-4 text-primary" />
+                  {barbershop.address}
+                </span>
+              )}
+              {barbershop.description && <p className="max-w-md">{barbershop.description}</p>}
+            </div>
+          )}
+        </header>
+
+        <div
+          className="animate-fade-in-up flex items-center justify-center gap-4 sm:gap-8"
+          style={{ animationDelay: "0.05s" }}
+        >
+          <StepBadge number={1} label="Serviço" state={step > 1 ? "done" : "active"} />
+          <span className="h-px w-8 bg-border sm:w-16" />
+          <StepBadge number={2} label="Horário" state={step > 2 ? "done" : step === 2 ? "active" : "todo"} />
+          <span className="h-px w-8 bg-border sm:w-16" />
+          <StepBadge number={3} label="Confirmação" state={step === 3 ? "active" : "todo"} />
+        </div>
+
+        {sp.error && (
+          <p className="animate-fade-in-up rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-sm text-destructive">
+            {errorMessages[sp.error] ?? "Algo deu errado."}
+          </p>
+        )}
+
+        <Card className="animate-fade-in-up shadow-sm" style={{ animationDelay: "0.1s" }}>
+          <form method="GET" className="flex flex-col gap-5 p-6">
+            <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+              <IconScissors className="size-5 text-primary" />
+              Serviço e barbeiro
+            </h2>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium">Serviço</span>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {barbershop.services.map((service) => (
+                  <label
+                    key={service.id}
+                    className="flex cursor-pointer flex-col gap-0.5 rounded-lg border border-border p-3 text-sm transition-colors has-checked:border-primary has-checked:bg-primary/5"
+                  >
+                    <input
+                      type="radio"
+                      name="serviceId"
+                      value={service.id}
+                      defaultChecked={sp.serviceId === service.id}
+                      required
+                      className="sr-only"
+                    />
+                    <span className="font-medium">{service.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {service.durationMin} min · {formatPrice(service.price)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium">Barbeiro</span>
+              <div className="flex flex-wrap gap-2">
+                <label className="flex cursor-pointer items-center gap-2 rounded-full border border-border py-1.5 pl-2 pr-3 text-sm transition-colors has-checked:border-primary has-checked:bg-primary/5">
+                  <input
+                    type="radio"
+                    name="staffId"
+                    value="any"
+                    defaultChecked={sp.staffId === "any"}
+                    required
+                    className="sr-only"
+                  />
+                  <span className="flex size-7 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                    <IconShuffle className="size-3.5" />
+                  </span>
+                  Qualquer um
+                </label>
+                {barbershop.staff.map((member) => (
+                  <label
+                    key={member.id}
+                    className="flex cursor-pointer items-center gap-2 rounded-full border border-border py-1.5 pl-2 pr-3 text-sm transition-colors has-checked:border-primary has-checked:bg-primary/5"
+                  >
+                    <input
+                      type="radio"
+                      name="staffId"
+                      value={member.id}
+                      defaultChecked={sp.staffId === member.id}
+                      required
+                      className="sr-only"
+                    />
+                    <span className="flex size-7 items-center justify-center rounded-full bg-secondary text-xs font-medium">
+                      {member.name.charAt(0).toUpperCase()}
+                    </span>
+                    {member.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="date" className="flex items-center gap-1.5 text-sm font-medium">
+                <IconCalendar className="size-4 text-primary" />
+                Data
+              </label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                defaultValue={sp.date}
+                required
+                min={formatLocalDateString(new Date())}
+                suppressHydrationWarning
+              />
+            </div>
+
+            <Button type="submit" size="lg">
+              Ver horários disponíveis
+            </Button>
+          </form>
+        </Card>
+
+        {hasSelection && (
+          <Card className="animate-fade-in-up shadow-sm">
+            <div className="flex flex-col gap-4 p-6">
+              <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+                <IconClock className="size-5 text-primary" />
+                Escolha o horário
+              </h2>
+              {slots.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum horário livre nesse dia. Tente outra data.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {Object.entries(groupedSlots).map(([label, periodSlots]) => (
+                    <div key={label} className="flex flex-col gap-2">
+                      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {label}
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {periodSlots.map((slotOption) => {
+                          const isSelected = sp.slot === slotOption.start.toISOString();
+                          const href = buildLink(barbershop.id, {
+                            serviceId: sp.serviceId,
+                            staffId: slotOption.staffId,
+                            date: sp.date,
+                            slot: slotOption.start.toISOString(),
+                          });
+                          return (
+                            <Link key={slotOption.start.toISOString()} href={href}>
+                              <Button variant={isSelected ? "primary" : "outline"} size="sm">
+                                {formatTime(slotOption.start)}
+                              </Button>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
+        {selectedSlot && selectedService && (
+          <Card className="animate-fade-in-up shadow-sm">
+            <div className="flex flex-col gap-4 p-6">
+              <h2 className="font-display text-lg font-semibold">Confirme seus dados</h2>
+              <div className="flex items-center gap-3 rounded-lg bg-secondary/60 p-3 text-sm">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <IconScissors className="size-4" />
+                </span>
+                <div>
+                  <p className="font-medium">{selectedService.name}</p>
+                  <p className="text-muted-foreground">
+                    {formatDate(selectedSlot.start)} às {formatTime(selectedSlot.start)}
+                  </p>
+                </div>
+              </div>
+
+              {session?.user ? (
+                <form action={createAppointmentAction} className="flex flex-col gap-3">
+                  <input type="hidden" name="barbershopId" value={barbershop.id} />
+                  <input type="hidden" name="staffId" value={selectedSlot.staffId} />
+                  <input type="hidden" name="serviceId" value={selectedService.id} />
+                  <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
+                  <Button type="submit" size="lg">
+                    Confirmar agendamento
+                  </Button>
+                </form>
+              ) : sp.sent === "1" ? (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
+                    <IconWhatsapp className="size-5 shrink-0 text-emerald-600" />
+                    <p>
+                      Enviamos um link de acesso pro WhatsApp{" "}
+                      <span className="font-medium">{formatPhoneDisplay(sp.phone ?? "")}</span>.
+                      Abra o WhatsApp e toque no link pra continuar.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <form action={requestMagicLinkAction}>
+                      <input type="hidden" name="barbershopId" value={barbershop.id} />
+                      <input type="hidden" name="staffId" value={selectedSlot.staffId} />
+                      <input type="hidden" name="serviceId" value={selectedService.id} />
+                      <input type="hidden" name="date" value={sp.date ?? ""} />
+                      <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
+                      <input type="hidden" name="name" value={sp.name ?? ""} />
+                      <input type="hidden" name="phone" value={sp.phone ?? ""} />
+                      <button type="submit" className="text-muted-foreground underline hover:text-foreground">
+                        Reenviar link
+                      </button>
+                    </form>
+                    <span className="text-border">·</span>
+                    <Link
+                      href={buildLink(barbershop.id, {
+                        serviceId: sp.serviceId,
+                        staffId: selectedSlot.staffId,
+                        date: sp.date,
+                        slot: selectedSlot.start.toISOString(),
+                      })}
+                      className="text-muted-foreground underline hover:text-foreground"
+                    >
+                      Número errado? Trocar
+                    </Link>
+                  </div>
+                </div>
+              ) : sp.name && sp.phone ? (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3 rounded-lg bg-secondary/60 p-3 text-sm">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <IconWhatsapp className="size-4" />
+                    </span>
+                    <div>
+                      <p className="text-muted-foreground">Enviaremos o link de acesso para:</p>
+                      <p className="font-medium">{formatPhoneDisplay(sp.phone)}</p>
+                    </div>
+                  </div>
+                  <form action={requestMagicLinkAction} className="flex items-center gap-3">
+                    <input type="hidden" name="barbershopId" value={barbershop.id} />
+                    <input type="hidden" name="staffId" value={selectedSlot.staffId} />
+                    <input type="hidden" name="serviceId" value={selectedService.id} />
+                    <input type="hidden" name="date" value={sp.date ?? ""} />
+                    <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
+                    <input type="hidden" name="name" value={sp.name} />
+                    <input type="hidden" name="phone" value={sp.phone} />
+                    <Button type="submit">Enviar link de acesso</Button>
+                    <Link
+                      href={buildLink(barbershop.id, {
+                        serviceId: sp.serviceId,
+                        staffId: selectedSlot.staffId,
+                        date: sp.date,
+                        slot: selectedSlot.start.toISOString(),
+                      })}
+                      className="text-sm text-muted-foreground underline hover:text-foreground"
+                    >
+                      Corrigir
+                    </Link>
+                  </form>
+                </div>
+              ) : (
+                <form method="GET" className="flex flex-col gap-3">
+                  <input type="hidden" name="serviceId" value={sp.serviceId} />
+                  <input type="hidden" name="staffId" value={selectedSlot.staffId} />
+                  <input type="hidden" name="date" value={sp.date} />
+                  <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="name" className="text-sm font-medium">
+                      Nome
+                    </label>
+                    <Input id="name" name="name" required defaultValue={sp.name} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="phone" className="flex items-center gap-1.5 text-sm font-medium">
+                      <IconWhatsapp className="size-4 text-emerald-600" />
+                      Telefone (WhatsApp)
+                    </label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      required
+                      defaultValue={sp.phone}
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                  <Button type="submit">Continuar</Button>
+                </form>
+              )}
+            </div>
+          </Card>
         )}
       </div>
-
-      {sp.error && (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-sm text-destructive">
-          {errorMessages[sp.error] ?? "Algo deu errado."}
-        </p>
-      )}
-
-      <Card>
-        <form method="GET" className="flex flex-col gap-4 p-6">
-          <h2 className="font-display text-lg font-semibold">1. Serviço, barbeiro e data</h2>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="serviceId" className="text-sm font-medium">
-              Serviço
-            </label>
-            <select
-              id="serviceId"
-              name="serviceId"
-              defaultValue={sp.serviceId ?? ""}
-              required
-              className="h-10 rounded-md border border-border bg-background px-3 text-sm"
-            >
-              <option value="" disabled>
-                Selecione
-              </option>
-              {barbershop.services.map((service) => (
-                <option key={service.id} value={service.id}>
-                  {service.name} — {service.durationMin} min — {formatPrice(service.price)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="staffId" className="text-sm font-medium">
-              Barbeiro
-            </label>
-            <select
-              id="staffId"
-              name="staffId"
-              defaultValue={sp.staffId ?? ""}
-              required
-              className="h-10 rounded-md border border-border bg-background px-3 text-sm"
-            >
-              <option value="" disabled>
-                Selecione
-              </option>
-              <option value="any">Qualquer barbeiro disponível</option>
-              {barbershop.staff.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="date" className="text-sm font-medium">
-              Data
-            </label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              defaultValue={sp.date}
-              required
-              min={formatLocalDateString(new Date())}
-            />
-          </div>
-
-          <Button type="submit">Ver horários</Button>
-        </form>
-      </Card>
-
-      {hasSelection && (
-        <Card>
-          <div className="flex flex-col gap-4 p-6">
-            <h2 className="font-display text-lg font-semibold">2. Escolha o horário</h2>
-            {slots.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nenhum horário livre nesse dia. Tente outra data.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {slots.map((slotOption) => {
-                  const isSelected = sp.slot === slotOption.start.toISOString();
-                  const href = buildLink(barbershop.id, {
-                    serviceId: sp.serviceId,
-                    staffId: slotOption.staffId,
-                    date: sp.date,
-                    slot: slotOption.start.toISOString(),
-                  });
-                  return (
-                    <Link key={slotOption.start.toISOString()} href={href}>
-                      <Button variant={isSelected ? "primary" : "outline"} size="sm">
-                        {formatTime(slotOption.start)}
-                      </Button>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {selectedSlot && selectedService && (
-        <Card>
-          <div className="flex flex-col gap-4 p-6">
-            <h2 className="font-display text-lg font-semibold">3. Confirme seus dados</h2>
-            <p className="text-sm text-muted-foreground">
-              {selectedService.name} às {formatTime(selectedSlot.start)} do dia{" "}
-              {formatDate(selectedSlot.start)}
-            </p>
-
-            {session?.user ? (
-              <form action={createAppointmentAction} className="flex flex-col gap-3">
-                <input type="hidden" name="barbershopId" value={barbershop.id} />
-                <input type="hidden" name="staffId" value={selectedSlot.staffId} />
-                <input type="hidden" name="serviceId" value={selectedService.id} />
-                <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
-                <Button type="submit" size="lg">
-                  Confirmar agendamento
-                </Button>
-              </form>
-            ) : sp.otp === "1" ? (
-              <form action={verifyOtpAction} className="flex flex-col gap-3">
-                <input type="hidden" name="barbershopId" value={barbershop.id} />
-                <input type="hidden" name="staffId" value={selectedSlot.staffId} />
-                <input type="hidden" name="serviceId" value={selectedService.id} />
-                <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
-                <input type="hidden" name="name" value={sp.name ?? ""} />
-                <input type="hidden" name="phone" value={sp.phone ?? ""} />
-                <p className="text-sm text-muted-foreground">
-                  Enviamos um código pro WhatsApp {sp.phone}.
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="code" className="text-sm font-medium">
-                    Código
-                  </label>
-                  <Input id="code" name="code" required maxLength={6} />
-                </div>
-                <Button type="submit">Confirmar código</Button>
-              </form>
-            ) : (
-              <form action={requestOtpAction} className="flex flex-col gap-3">
-                <input type="hidden" name="barbershopId" value={barbershop.id} />
-                <input type="hidden" name="staffId" value={selectedSlot.staffId} />
-                <input type="hidden" name="serviceId" value={selectedService.id} />
-                <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Nome
-                  </label>
-                  <Input id="name" name="name" required defaultValue={sp.name} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="phone" className="text-sm font-medium">
-                    Telefone (WhatsApp)
-                  </label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    required
-                    defaultValue={sp.phone}
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
-                <Button type="submit">Receber código por WhatsApp</Button>
-              </form>
-            )}
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

@@ -1,15 +1,32 @@
+import twilio from "twilio";
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const fromNumber = process.env.TWILIO_WHATSAPP_FROM;
+
+const client = accountSid && authToken ? twilio(accountSid, authToken) : null;
+
 /**
- * Envio de mensagens via WhatsApp — hoje mockado (loga no console).
- * Quando houver um provedor configurado (Twilio, Meta Cloud API etc.),
- * troque a implementação aqui; o resto do app chama só `sendWhatsappMessage`.
+ * Envio de mensagens via WhatsApp. Usa a Twilio quando TWILIO_ACCOUNT_SID e
+ * TWILIO_AUTH_TOKEN estão configurados no .env; caso contrário, cai para um
+ * mock que só loga no console (útil em dev sem credenciais).
  */
 export async function sendWhatsappMessage(phone: string, message: string): Promise<void> {
-  console.log(`[WhatsApp mock] Para ${phone}: ${message}`);
+  if (!client || !fromNumber) {
+    console.log(`[WhatsApp mock] Para ${phone}: ${message}`);
+    return;
+  }
+
+  await client.messages.create({
+    from: fromNumber,
+    to: `whatsapp:${phone}`,
+    body: message,
+  });
 }
 
-export async function sendWhatsappOtp(phone: string, code: string): Promise<void> {
+export async function sendWhatsappMagicLink(phone: string, url: string): Promise<void> {
   await sendWhatsappMessage(
     phone,
-    `Seu código de verificação Barber SaaS é ${code}. Ele expira em 10 minutos.`
+    `Toque no link pra confirmar seu agendamento: ${url}\nO link expira em 10 minutos.`
   );
 }

@@ -1,15 +1,25 @@
 import { IconMenu, IconLogout } from "./icons";
+import { ShareButton } from "./share-button";
 
 interface HeaderProps {
   onMenuClick: () => void;
   userName: string;
   roleLabel: string;
   onSignOut: () => Promise<void>;
+  barbershopId: string;
+  barbershopName: string;
 }
 
-export function Header({ onMenuClick, userName, roleLabel, onSignOut }: HeaderProps) {
+export function Header({
+  onMenuClick,
+  userName,
+  roleLabel,
+  onSignOut,
+  barbershopId,
+  barbershopName,
+}: HeaderProps) {
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4 sm:px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border px-4 sm:px-6">
       <button
         className="text-foreground md:hidden"
         onClick={onMenuClick}
@@ -18,10 +28,10 @@ export function Header({ onMenuClick, userName, roleLabel, onSignOut }: HeaderPr
         <IconMenu />
       </button>
 
-      <div className="hidden md:block" />
+      <ShareButton barbershopId={barbershopId} barbershopName={barbershopName} />
 
       <div className="flex items-center gap-3">
-        <div className="text-right">
+        <div className="hidden text-right sm:block">
           <p className="text-sm font-medium leading-none">{userName}</p>
           <p className="text-xs text-muted-foreground">{roleLabel}</p>
         </div>

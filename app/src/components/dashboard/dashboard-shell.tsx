@@ -6,6 +6,7 @@ import { Header } from "./header";
 
 interface DashboardShellProps {
   children: React.ReactNode;
+  barbershopId: string;
   barbershopName: string;
   userName: string;
   roleLabel: string;
@@ -14,6 +15,7 @@ interface DashboardShellProps {
 
 export function DashboardShell({
   children,
+  barbershopId,
   barbershopName,
   userName,
   roleLabel,
@@ -35,6 +37,8 @@ export function DashboardShell({
           userName={userName}
           roleLabel={roleLabel}
           onSignOut={onSignOut}
+          barbershopId={barbershopId}
+          barbershopName={barbershopName}
         />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
       </div>

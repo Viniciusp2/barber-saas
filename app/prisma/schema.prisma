@@ -59,12 +59,32 @@ model Staff {
   name         String
   avatar       String?
 
+  /// Dias da semana em que o barbeiro NÃO trabalha (0=domingo ... 6=sábado).
+  daysOff      Int[]         @default([])
+
   barbershopId String
   barbershop   Barbershop    @relation(fields: [barbershopId], references: [id])
 
   appointments Appointment[]
+  timeOffs     StaffTimeOff[]
 
   createdAt    DateTime       @default(now())
+}
+
+/// Bloqueios pontuais de horário do barbeiro: folga de algumas horas,
+/// começar mais tarde, fechar mais cedo, almoço estendido etc.
+model StaffTimeOff {
+  id        String   @id @default(cuid())
+  staffId   String
+  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([staffId])
 }
 
 /// SERVICES
@@ -143,14 +163,14 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-/// Códigos de verificação enviados por WhatsApp para login de clientes sem senha.
-model PhoneOtp {
+/// Links mágicos enviados por WhatsApp para login de clientes sem senha.
+model PhoneLoginToken {
   id         String    @id @default(cuid())
   phone      String
-  code       String
+  token      String    @unique
+  name       String?
   expiresAt  DateTime
   consumedAt DateTime?
-  attempts   Int       @default(0)
   createdAt  DateTime  @default(now())
 
   @@index([phone])

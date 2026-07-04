@@ -4,7 +4,6 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { normalizePhone, verifyPhoneOtp } from "@/lib/phone-otp";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -45,52 +44,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
-    Credentials({
-      id: "phone-otp",
-      name: "WhatsApp",
-      credentials: {
-        phone: { label: "Telefone", type: "text" },
-        code: { label: "Código", type: "text" },
-        name: { label: "Nome", type: "text" },
-      },
-      async authorize(credentials) {
-        const phoneInput = credentials?.phone;
-        const code = credentials?.code;
-        const name = credentials?.name;
-
-        if (typeof phoneInput !== "string" || typeof code !== "string") {
-          return null;
-        }
-
-        const isValid = await verifyPhoneOtp(phoneInput, code);
-        if (!isValid) {
-          return null;
-        }
-
-        const phone = normalizePhone(phoneInput);
-
-        const user = await prisma.user.upsert({
-          where: { phone },
-          update: { phoneVerified: new Date() },
-          create: {
-            phone,
-            phoneVerified: new Date(),
-            name: typeof name === "string" && name.trim() ? name.trim() : null,
-            role: "USER",
-          },
-        });
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-          role: user.role,
-        };
-      },
-    }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",

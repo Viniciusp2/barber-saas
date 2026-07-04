@@ -16,6 +16,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardShell
+      barbershopId={barbershop.id}
       barbershopName={barbershop.name}
       userName={session.user.name ?? session.user.email ?? "Usuário"}
       roleLabel="Dono da barbearia"

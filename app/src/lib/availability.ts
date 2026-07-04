@@ -31,6 +31,10 @@ export async function getAvailableSlots(
     throw new Error("O barbeiro e o serviço pertencem a barbearias diferentes.");
   }
 
+  if (staff.daysOff.includes(date.getDay())) {
+    return [];
+  }
+
   const { openingHour, closingHour } = staff.barbershop;
 
   const dayStart = startOfDay(date);
@@ -38,19 +42,31 @@ export async function getAvailableSlots(
   const businessStart = addMinutes(dayStart, openingHour * 60);
   const businessEnd = addMinutes(dayStart, closingHour * 60);
 
-  const existingAppointments = await prisma.appointment.findMany({
-    where: {
-      staffId,
-      date: { gte: dayStart, lte: dayEnd },
-      status: { not: "CANCELLED" },
-    },
-    include: { service: { select: { durationMin: true } } },
-  });
+  const [existingAppointments, timeOffs] = await Promise.all([
+    prisma.appointment.findMany({
+      where: {
+        staffId,
+        date: { gte: dayStart, lte: dayEnd },
+        status: { not: "CANCELLED" },
+      },
+      include: { service: { select: { durationMin: true } } },
+    }),
+    prisma.staffTimeOff.findMany({
+      where: {
+        staffId,
+        startAt: { lte: dayEnd },
+        endAt: { gte: dayStart },
+      },
+    }),
+  ]);
 
-  const busySlots: TimeSlot[] = existingAppointments.map((appointment) => ({
-    start: appointment.date,
-    end: addMinutes(appointment.date, appointment.service.durationMin),
-  }));
+  const busySlots: TimeSlot[] = [
+    ...existingAppointments.map((appointment) => ({
+      start: appointment.date,
+      end: addMinutes(appointment.date, appointment.service.durationMin),
+    })),
+    ...timeOffs.map((timeOff) => ({ start: timeOff.startAt, end: timeOff.endAt })),
+  ];
 
   const now = new Date();
   const availableSlots: TimeSlot[] = [];

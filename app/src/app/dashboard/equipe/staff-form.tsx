@@ -7,9 +7,20 @@ interface StaffFormProps {
   defaultValues?: {
     name: string;
     avatar: string | null;
+    daysOff: number[];
   };
   submitLabel: string;
 }
+
+const weekDays = [
+  { value: 0, label: "Dom" },
+  { value: 1, label: "Seg" },
+  { value: 2, label: "Ter" },
+  { value: 3, label: "Qua" },
+  { value: 4, label: "Qui" },
+  { value: 5, label: "Sex" },
+  { value: 6, label: "Sáb" },
+];
 
 export function StaffForm({ action, defaultValues, submitLabel }: StaffFormProps) {
   return (
@@ -38,6 +49,27 @@ export function StaffForm({ action, defaultValues, submitLabel }: StaffFormProps
           placeholder="Opcional"
           defaultValue={defaultValues?.avatar ?? ""}
         />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium">Dias de folga</span>
+        <div className="flex flex-wrap gap-2">
+          {weekDays.map((day) => (
+            <label
+              key={day.value}
+              className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm has-checked:border-primary has-checked:bg-primary/10"
+            >
+              <input
+                type="checkbox"
+                name="daysOff"
+                value={day.value}
+                defaultChecked={defaultValues?.daysOff.includes(day.value)}
+                className="size-4 accent-primary"
+              />
+              {day.label}
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="mt-2 flex gap-3">

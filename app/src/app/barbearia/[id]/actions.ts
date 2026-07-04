@@ -2,10 +2,9 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { AuthError } from "next-auth";
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { requestPhoneOtp } from "@/lib/phone-otp";
+import { requestPhoneMagicLink } from "@/lib/phone-auth";
 import { getAvailableSlots, formatLocalDateString } from "@/lib/availability";
 
 interface BookingUrlParams {
@@ -15,7 +14,7 @@ interface BookingUrlParams {
   slot?: string;
   name?: string;
   phone?: string;
-  otp?: string;
+  sent?: string;
   error?: string;
   success?: string;
 }
@@ -39,58 +38,25 @@ function readBaseParams(formData: FormData) {
   };
 }
 
-export async function requestOtpAction(formData: FormData) {
+export async function requestMagicLinkAction(formData: FormData) {
   const { barbershopId, serviceId, staffId, date, slot } = readBaseParams(formData);
   const name = String(formData.get("name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
 
+  const base = { serviceId, staffId, date, slot, name, phone };
+
   if (!name || !phone) {
-    redirect(
-      buildBookingUrl(barbershopId, { serviceId, staffId, date, slot, name, phone, error: "dados_invalidos" })
-    );
+    redirect(buildBookingUrl(barbershopId, { ...base, error: "dados_invalidos" }));
   }
 
-  const result = await requestPhoneOtp(phone);
+  const redirectTo = buildBookingUrl(barbershopId, { serviceId, staffId, date, slot });
+  const result = await requestPhoneMagicLink(phone, name, redirectTo);
 
   if (!result.ok) {
-    redirect(
-      buildBookingUrl(barbershopId, { serviceId, staffId, date, slot, name, phone, error: "otp_aguarde" })
-    );
+    redirect(buildBookingUrl(barbershopId, { ...base, error: "link_aguarde" }));
   }
 
-  redirect(buildBookingUrl(barbershopId, { serviceId, staffId, date, slot, name, phone, otp: "1" }));
-}
-
-export async function verifyOtpAction(formData: FormData) {
-  const { barbershopId, serviceId, staffId, date, slot } = readBaseParams(formData);
-  const name = String(formData.get("name") ?? "");
-  const phone = String(formData.get("phone") ?? "");
-  const code = String(formData.get("code") ?? "");
-
-  try {
-    await signIn("phone-otp", {
-      phone,
-      code,
-      name,
-      redirectTo: buildBookingUrl(barbershopId, { serviceId, staffId, date, slot }),
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      redirect(
-        buildBookingUrl(barbershopId, {
-          serviceId,
-          staffId,
-          date,
-          slot,
-          name,
-          phone,
-          otp: "1",
-          error: "otp_invalido",
-        })
-      );
-    }
-    throw error;
-  }
+  redirect(buildBookingUrl(barbershopId, { ...base, sent: "1" }));
 }
 
 const createAppointmentSchema = z.object({

@@ -58,6 +58,72 @@
   }
 }
 
+/**
+ * Força o tema claro independente do sistema — usado na página pública de
+ * agendamento, que deve ter uma aparência de marca consistente para o cliente.
+ */
+.theme-light-forced {
+  --background: #faf9f7;
+  --foreground: #1c1917;
+
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+
+  --primary: #a3540f;
+  --primary-foreground: #fffaf0;
+
+  --secondary: #f0ede8;
+  --secondary-foreground: #1c1917;
+
+  --muted: #f0ede8;
+  --muted-foreground: #78716c;
+
+  --border: #e6e1da;
+
+  --destructive: #b91c1c;
+  --destructive-foreground: #fffaf0;
+
+  background: var(--background);
+  color: var(--foreground);
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-scale-in {
+    animation: none;
+  }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 0.25rem);
   --radius-md: var(--radius);
