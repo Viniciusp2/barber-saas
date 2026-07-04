@@ -1,44 +1,173 @@
+# 💈 BarberSaaS
+
+> Plataforma SaaS moderna para gestão de barbearias, desenvolvida com **Next.js**, **React**, **TypeScript**, **Prisma** e **PostgreSQL**, oferecendo uma experiência completa para proprietários e clientes.
+
+O BarberSaaS foi projetado com foco em **escalabilidade**, **segurança** e **experiência do usuário**, permitindo que cada barbearia gerencie seus serviços, equipe e agendamentos em um ambiente isolado (arquitetura **multi-tenant**).
 
 ---
 
-# 📘 **README.md — barber-saas**
+## ✨ Principais funcionalidades
 
-````md
-# Barber SaaS
+### 👤 Gestão da Barbearia
+- Autenticação com Google (Auth.js)
+- Onboarding automático para novas barbearias
+- Dashboard administrativo
+- Controle de permissões por papéis (OWNER, USER e ADMIN)
+- Configurações da barbearia
 
-Sistema SaaS para barbearias com agendamentos online, gestão de serviços, autenticação com Google, pagamentos integrados e suporte a IA para automação e assistente de voz. Desenvolvido com Next.js, TypeScript, PostgreSQL e Docker, focado em escalabilidade, desempenho e facilidade de uso.
+### ✂️ Gestão Operacional
+- Cadastro de serviços
+- Cadastro da equipe
+- CRUD completo utilizando Server Actions
+- Validação com Zod
+- Arquitetura Multi-Tenant
+
+### 📅 Agendamentos *(Em desenvolvimento)*
+- Portal público para clientes
+- Escolha de barbeiro e serviço
+- Seleção de horários disponíveis
+- Reagendamento e cancelamento
+- Login simplificado via telefone + código de verificação
+
+### 📲 Comunicação *(Planejado)*
+- Confirmação automática de agendamento
+- Lembretes por WhatsApp
+- Notificações por e-mail
+
+### 💳 Monetização *(Planejado)*
+- Assinaturas mensais do SaaS
+- Integração com Stripe
+- Integração com Mercado Pago
+
+### 🚀 Futuras funcionalidades
+- Programa de fidelidade
+- Loja de produtos da barbearia
+- Galeria de cortes realizados
+- Página pública personalizada da barbearia
+- IA para automação de atendimento
+- Assistente inteligente para agendamentos
 
 ---
 
-## 🚀 Tecnologias Principais
-- Next.js 14 (App Router)
-- React + TypeScript
-- PostgreSQL + Prisma ORM
-- Docker & Docker Compose
-- NextAuth (OAuth Google)
-- Stripe / Mercado Pago (pagamentos)
-- IA para automação e assistente de voz
-- TailwindCSS
+# 🛠️ Tecnologias
+
+## Front-end
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+
+## Back-end
+
+- Auth.js (NextAuth v5)
+- Prisma ORM
+- PostgreSQL
+- Zod
+- Server Actions
+
+## Infraestrutura
+
+- Docker
+- Docker Compose
+- Supabase (PostgreSQL)
+- Google OAuth
 
 ---
 
-## 📦 Como rodar o projeto com Docker
+# 🏗️ Arquitetura
 
-1. Clone o repositório:
-```bash
-git clone https://github.com/SEU_USUARIO/barber-saas.git
-cd barber-saas
-````
+O projeto segue uma arquitetura moderna baseada em:
 
-2. Crie o arquivo `.env` baseado em `.env.example`.
+- Multi-Tenant
+- App Router
+- Server Actions
+- Prisma ORM
+- Autenticação JWT
+- Componentes reutilizáveis
+- Boas práticas de Clean Code
 
-3. Suba os containers:
+---
 
-```bash
-docker-compose up -d
+# 📂 Estrutura do projeto
+
+```text
+src/
+├── app/
+├── actions/
+├── components/
+├── lib/
+├── schemas/
+├── services/
+├── auth.ts
+├── proxy.ts
+
+prisma/
+├── schema.prisma
+
+public/
+
+Dockerfile
+docker-compose.yml
 ```
 
-4. Acesse:
+---
+
+# 🚀 Executando o projeto
+
+## 1. Clone o repositório
+
+```bash
+git clone https://github.com/Viniciusp2/barber-saas.git
+```
+
+```bash
+cd barber-saas
+```
+
+---
+
+## 2. Instale as dependências
+
+```bash
+npm install
+```
+
+---
+
+## 3. Configure as variáveis de ambiente
+
+Crie um arquivo `.env` baseado em `.env.example`.
+
+Exemplo:
+
+```env
+DATABASE_URL=
+DIRECT_URL=
+
+AUTH_SECRET=
+
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
+```
+
+---
+
+## 4. Execute as migrations
+
+```bash
+npx prisma migrate dev
+```
+
+---
+
+## 5. Inicie o projeto
+
+```bash
+npm run dev
+```
+
+Acesse:
 
 ```
 http://localhost:3000
@@ -46,85 +175,60 @@ http://localhost:3000
 
 ---
 
-## 🗄️ Estrutura inicial do projeto
+# 📈 Roadmap
 
-```
-/src
-  /app
-    /api
-    /auth
-    /dashboard
-  /components
-  /lib
-  /services
-/prisma
-  schema.prisma
-docker-compose.yml
-Dockerfile
-```
+## ✅ Concluído
+
+- [x] Estrutura inicial
+- [x] Auth.js + Google OAuth
+- [x] Onboarding automático
+- [x] Dashboard
+- [x] CRUD de Serviços
+- [x] CRUD da Equipe
+- [x] Configurações da Barbearia
+- [x] Multi-Tenant
+- [x] Server Actions
+- [x] Prisma + PostgreSQL
 
 ---
 
-## 🔐 Autenticação
+## 🚧 Em desenvolvimento
 
-Autenticação via **NextAuth + Google OAuth**.
-O usuário pode acessar como cliente, barbeiro ou dono da barbearia.
-
----
-
-## 💳 Pagamentos
-
-Integração planejada com:
-
-* Stripe (preferência)
-* Mercado Pago (alternativa nacional)
-
-Utilizada para:
-
-* Assinaturas mensais do SaaS
-* Pagamentos de serviços da barbearia (opcional)
+- [ ] Sistema de Agendamentos
+- [ ] Portal Público do Cliente
+- [ ] Gestão de Clientes
+- [ ] Calendário
+- [ ] Horários disponíveis
 
 ---
 
-## 🤖 IA e Automação
+## 📌 Próximas versões
 
-* Sugestão inteligente de horários
-* Assistente de voz integrado (IAPO)
-* Classificação automática de pedidos
-* Geração de respostas rápidas para clientes
-
----
-
-## 🗺️ Roadmap (versão inicial)
-
-### MVP
-
-* [ ] Autenticação Google
-* [ ] Dashboard da barbearia
-* [ ] CRUD de serviços e equipe
-* [ ] Sistema de agendamentos
-* [ ] Notificações e emails
-* [ ] Pagamentos recorrentes (SaaS)
-* [ ] IA para sugestões de horários
-
-### Versão 2.0
-
-* [ ] Aplicativo mobile
-* [ ] Assistente de voz completo
-* [ ] Relatórios avançados
-* [ ] IA para marketing automático
+- [ ] WhatsApp
+- [ ] Notificações por e-mail
+- [ ] Pagamentos
+- [ ] Loja
+- [ ] Programa de fidelidade
+- [ ] Galeria de cortes
+- [ ] IA para atendimento
+- [ ] Aplicativo Mobile
 
 ---
 
-## 📄 Licença
+# 📸 Screenshots
+
+> Em breve serão adicionadas imagens das principais telas do sistema.
+
+---
+
+# 📄 Licença
 
 Este projeto está licenciado sob a **MIT License**.
 
 ---
 
-## 🤝 Contribuição
+# 👨‍💻 Autor
 
-Pull requests são bem-vindos. Para grandes mudanças, abra uma issue primeiro para discutirmos o que deseja modificar.
+Desenvolvido por **Vinicius Ribas**.
 
----
-
+Caso queira contribuir ou sugerir melhorias, fique à vontade para abrir uma **Issue** ou enviar um **Pull Request**.
