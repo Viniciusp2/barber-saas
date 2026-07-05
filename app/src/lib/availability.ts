@@ -1,13 +1,5 @@
 import { prisma } from "@/lib/prisma";
 
-/**
- * Passo (em minutos) entre os horários de início candidatos. Não confundir
- * com a duração do serviço: o passo só define a granularidade dos possíveis
- * inícios (ex: 11:00, 11:15, 11:30...); quanto tempo cada um ocupa depende
- * da duração do Service escolhido, calculada em getAvailableSlots.
- */
-const DEFAULT_SLOT_STEP_MINUTES = 15;
-
 export interface TimeSlot {
   start: Date;
   end: Date;
@@ -17,7 +9,7 @@ export async function getAvailableSlots(
   staffId: string,
   serviceId: string,
   date: Date,
-  stepMinutes: number = DEFAULT_SLOT_STEP_MINUTES
+  stepMinutes?: number
 ): Promise<TimeSlot[]> {
   const [staff, service] = await Promise.all([
     prisma.staff.findUnique({ where: { id: staffId } }),
@@ -33,6 +25,11 @@ export async function getAvailableSlots(
   if (staff.barbershopId !== service.barbershopId) {
     throw new Error("O barbeiro e o serviço pertencem a barbearias diferentes.");
   }
+
+  // Por padrão, os horários oferecidos ficam espaçados pela própria duração do
+  // serviço (um serviço de 75min gera opções de 75 em 75min) — evita uma grade
+  // apertada demais com opções quase idênticas quando o serviço é longo.
+  const effectiveStep = stepMinutes ?? service.durationMin;
 
   const weekday = date.getDay();
   const workingHours = await prisma.workingHours.findUnique({
@@ -87,7 +84,7 @@ export async function getAvailableSlots(
   for (
     let slotStart = businessStart;
     addMinutes(slotStart, service.durationMin) <= businessEnd;
-    slotStart = addMinutes(slotStart, stepMinutes)
+    slotStart = addMinutes(slotStart, effectiveStep)
   ) {
     if (slotStart < now) {
       continue;
