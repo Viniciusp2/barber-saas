@@ -10,7 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { confirmAppointment, cancelAppointment, completeAppointment } from "./actions";
+import {
+  confirmAppointment,
+  cancelAppointment,
+  completeAppointment,
+  confirmAllAppointments,
+} from "./actions";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Pendente",
@@ -44,13 +49,24 @@ export default async function AgendamentosPage() {
     orderBy: { date: "asc" },
   });
 
+  const pendingCount = appointments.filter((a) => a.status === "PENDING").length;
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">Agendamentos</h1>
-        <p className="text-sm text-muted-foreground">
-          Acompanhe e gerencie os horários marcados na sua barbearia.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold">Agendamentos</h1>
+          <p className="text-sm text-muted-foreground">
+            Acompanhe e gerencie os horários marcados na sua barbearia.
+          </p>
+        </div>
+        {pendingCount > 1 && (
+          <form action={confirmAllAppointments}>
+            <Button type="submit" variant="outline" size="sm">
+              Confirmar todos os pendentes ({pendingCount})
+            </Button>
+          </form>
+        )}
       </div>
 
       {appointments.length === 0 ? (

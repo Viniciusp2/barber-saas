@@ -3,7 +3,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Button } from "@/components/ui/button";
 import { requireBarbershop } from "@/lib/get-current-barbershop";
 import { prisma } from "@/lib/prisma";
-import { confirmAppointment, cancelAppointment, completeAppointment } from "./agendamentos/actions";
+import {
+  confirmAppointment,
+  cancelAppointment,
+  completeAppointment,
+  confirmAllAppointments,
+} from "./agendamentos/actions";
 import {
   IconCalendar,
   IconScissors,
@@ -111,13 +116,22 @@ export default async function DashboardPage() {
       {pendingAppointments.length > 0 && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardHeader>
-            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-              <IconAlertCircle className="size-5" />
-              <CardTitle className="text-amber-700 dark:text-amber-400">
-                {pendingAppointments.length === 1
-                  ? "1 agendamento esperando confirmação"
-                  : `${pendingAppointments.length} agendamentos esperando confirmação`}
-              </CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <IconAlertCircle className="size-5" />
+                <CardTitle className="text-amber-700 dark:text-amber-400">
+                  {pendingAppointments.length === 1
+                    ? "1 agendamento esperando confirmação"
+                    : `${pendingAppointments.length} agendamentos esperando confirmação`}
+                </CardTitle>
+              </div>
+              {pendingAppointments.length > 1 && (
+                <form action={confirmAllAppointments}>
+                  <Button type="submit" variant="outline" size="sm">
+                    Confirmar todos
+                  </Button>
+                </form>
+              )}
             </div>
           </CardHeader>
           <div className="flex flex-col divide-y divide-border px-6 pb-6">
