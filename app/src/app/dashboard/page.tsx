@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { BarChart } from "@/components/dashboard/bar-chart";
 import { requireBarbershop } from "@/lib/get-current-barbershop";
 import { prisma } from "@/lib/prisma";
+import { formatLocalDateString } from "@/lib/availability";
 import {
   confirmAppointment,
   cancelAppointment,
@@ -15,7 +17,20 @@ import {
   IconUsers,
   IconAlertCircle,
   IconPlus,
+  IconTrendingUp,
 } from "@/components/dashboard/icons";
+
+function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatCurrencyCompact(value: number) {
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  });
+}
 
 const statusLabels: Record<string, string> = {
   PENDING: "Pendente",
@@ -59,7 +74,21 @@ export default async function DashboardPage() {
     month: "long",
   });
 
-  const [servicesCount, staffCount, pendingAppointments, todayAppointments] = await Promise.all([
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const chartDays = 7;
+  const chartStart = new Date(todayStart);
+  chartStart.setDate(chartStart.getDate() - (chartDays - 1));
+
+  const [
+    servicesCount,
+    staffCount,
+    pendingAppointments,
+    todayAppointments,
+    monthRevenueAppointments,
+    chartAppointments,
+  ] = await Promise.all([
     prisma.service.count({ where: { barbershopId: barbershop.id } }),
     prisma.staff.count({ where: { barbershopId: barbershop.id } }),
     prisma.appointment.findMany({
@@ -76,11 +105,45 @@ export default async function DashboardPage() {
       include: { client: true, service: true, staff: true },
       orderBy: { date: "asc" },
     }),
+    prisma.appointment.findMany({
+      where: {
+        barbershopId: barbershop.id,
+        date: { gte: monthStart, lte: monthEnd },
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+      },
+      include: { service: true },
+    }),
+    prisma.appointment.findMany({
+      where: {
+        barbershopId: barbershop.id,
+        date: { gte: chartStart, lte: todayEnd },
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+      },
+      include: { service: true },
+    }),
   ]);
+
+  const monthRevenue = monthRevenueAppointments.reduce((sum, a) => sum + a.service.price, 0);
+
+  const revenueByDay = new Map<string, number>();
+  for (let i = 0; i < chartDays; i++) {
+    const d = new Date(chartStart);
+    d.setDate(d.getDate() + i);
+    revenueByDay.set(formatLocalDateString(d), 0);
+  }
+  for (const appointment of chartAppointments) {
+    const key = formatLocalDateString(appointment.date);
+    revenueByDay.set(key, (revenueByDay.get(key) ?? 0) + appointment.service.price);
+  }
+  const chartData = Array.from(revenueByDay.entries()).map(([date, value]) => ({
+    label: new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short" }),
+    value,
+  }));
 
   const firstName = session.user.name?.split(" ")[0] ?? "";
 
   const stats = [
+    { label: "Faturamento do mês", value: formatCurrency(monthRevenue), icon: IconTrendingUp },
     { label: "Agendamentos hoje", value: todayAppointments.length, icon: IconCalendar },
     { label: "Pendentes", value: pendingAppointments.length, icon: IconAlertCircle },
     { label: "Serviços cadastrados", value: servicesCount, icon: IconScissors },
@@ -174,7 +237,7 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map((stat) => (
           <Card key={stat.label}>
             <CardHeader>
@@ -184,13 +247,25 @@ export default async function DashboardPage() {
                 </span>
                 <div>
                   <CardDescription>{stat.label}</CardDescription>
-                  <CardTitle className="text-2xl">{stat.value}</CardTitle>
+                  <CardTitle className="text-xl">{stat.value}</CardTitle>
                 </div>
               </div>
             </CardHeader>
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Faturamento · últimos {chartDays} dias</CardTitle>
+          <CardDescription>
+            Considera agendamentos Confirmados e Concluídos (pendentes e cancelados não entram).
+          </CardDescription>
+        </CardHeader>
+        <div className="px-6 pb-6">
+          <BarChart data={chartData} formatValue={formatCurrencyCompact} />
+        </div>
+      </Card>
 
       <Card>
         <CardHeader>

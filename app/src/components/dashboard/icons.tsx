@@ -120,3 +120,12 @@ export function IconPlus(props: IconProps) {
     </svg>
   );
 }
+
+export function IconTrendingUp(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M22 7 13.5 15.5 8.5 10.5 2 17" />
+      <path d="M16 7h6v6" />
+    </svg>
+  );
+}
