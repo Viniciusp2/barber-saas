@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { auth, signIn } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signUp } from "./actions";
@@ -71,6 +71,23 @@ export default async function CadastroPage({
 
         <Button type="submit" size="lg" className="mt-2">
           Criar conta
+        </Button>
+      </form>
+
+      <div className="flex w-full max-w-sm items-center gap-3 text-xs uppercase text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        ou
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      <form
+        action={async () => {
+          "use server";
+          await signIn("google", { redirectTo: "/dashboard" });
+        }}
+      >
+        <Button type="submit" variant="outline" size="lg">
+          Cadastrar com Google
         </Button>
       </form>
 
