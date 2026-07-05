@@ -17,6 +17,19 @@ export async function confirmAppointment(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function completeAppointment(formData: FormData) {
+  const { barbershop } = await requireBarbershop();
+  const id = String(formData.get("id") ?? "");
+
+  await prisma.appointment.updateMany({
+    where: { id, barbershopId: barbershop.id },
+    data: { status: "COMPLETED" },
+  });
+
+  revalidatePath("/dashboard/agendamentos");
+  revalidatePath("/dashboard");
+}
+
 export async function cancelAppointment(formData: FormData) {
   const { barbershop } = await requireBarbershop();
   const id = String(formData.get("id") ?? "");

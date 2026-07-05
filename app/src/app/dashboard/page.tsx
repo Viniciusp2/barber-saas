@@ -6,12 +6,14 @@ const statusLabels: Record<string, string> = {
   PENDING: "Pendente",
   CONFIRMED: "Confirmado",
   CANCELLED: "Cancelado",
+  COMPLETED: "Concluído",
 };
 
 const statusClasses: Record<string, string> = {
   PENDING: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
   CONFIRMED: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
   CANCELLED: "bg-red-500/15 text-red-700 dark:text-red-400",
+  COMPLETED: "bg-slate-500/15 text-slate-700 dark:text-slate-400",
 };
 
 function formatTime(date: Date) {

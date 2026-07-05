@@ -15,8 +15,6 @@ interface BookingUrlParams {
   name?: string;
   phone?: string;
   error?: string;
-  success?: string;
-  appointmentId?: string;
 }
 
 function buildBookingUrl(barbershopId: string, params: BookingUrlParams): string {
@@ -108,5 +106,5 @@ export async function createAppointmentAction(formData: FormData) {
     },
   });
 
-  redirect(buildBookingUrl(barbershopId, { success: "1", appointmentId: appointment.id }));
+  redirect(`/agendamento/${appointment.id}`);
 }
