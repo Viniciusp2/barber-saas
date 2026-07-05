@@ -1,11 +1,14 @@
 "use server";
 
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { normalizePhone } from "@/lib/phone-auth";
 import { getAvailableSlots, formatLocalDateString } from "@/lib/availability";
+
+class SlotConflictError extends Error {}
 
 interface BookingUrlParams {
   serviceId?: string;
@@ -95,21 +98,84 @@ export async function createAppointmentAction(formData: FormData) {
     );
   }
 
-  const barbershop = await prisma.barbershop.findUnique({
-    where: { id: barbershopId },
-    select: { autoConfirmAppointments: true },
-  });
+  const [barbershop, service] = await Promise.all([
+    prisma.barbershop.findUnique({
+      where: { id: barbershopId },
+      select: { autoConfirmAppointments: true },
+    }),
+    prisma.service.findUnique({ where: { id: serviceId }, select: { durationMin: true } }),
+  ]);
 
-  const appointment = await prisma.appointment.create({
-    data: {
-      clientId,
-      staffId,
-      serviceId,
-      barbershopId,
-      date: startDate,
-      status: barbershop?.autoConfirmAppointments ? "CONFIRMED" : "PENDING",
-    },
-  });
+  if (!service) {
+    throw new Error("Serviço não encontrado.");
+  }
 
-  redirect(`/agendamento/${appointment.id}`);
+  const endDate = new Date(startDate.getTime() + service.durationMin * 60_000);
+  const dayStart = new Date(startDate);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(startDate);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  let appointmentId: string;
+
+  try {
+    appointmentId = await prisma.$transaction(
+      async (tx) => {
+        // Revalida a sobreposição dentro da transação (isolamento Serializable) pra
+        // fechar a janela de corrida entre o check acima e a gravação: duas requisições
+        // concorrentes pro mesmo horário não podem passar as duas por essa checagem.
+        const sameDayAppointments = await tx.appointment.findMany({
+          where: {
+            staffId,
+            status: { not: "CANCELLED" },
+            date: { gte: dayStart, lte: dayEnd },
+          },
+          include: { service: { select: { durationMin: true } } },
+        });
+
+        const hasOverlap = sameDayAppointments.some((existing) => {
+          const existingEnd = new Date(
+            existing.date.getTime() + existing.service.durationMin * 60_000
+          );
+          return startDate < existingEnd && endDate > existing.date;
+        });
+
+        if (hasOverlap) {
+          throw new SlotConflictError();
+        }
+
+        const created = await tx.appointment.create({
+          data: {
+            clientId,
+            staffId,
+            serviceId,
+            barbershopId,
+            date: startDate,
+            status: barbershop?.autoConfirmAppointments ? "CONFIRMED" : "PENDING",
+          },
+        });
+
+        return created.id;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
+  } catch (error) {
+    const isConflict =
+      error instanceof SlotConflictError ||
+      (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034");
+
+    if (isConflict) {
+      redirect(
+        buildBookingUrl(barbershopId, {
+          serviceId,
+          staffId,
+          date: formatLocalDateString(startDate),
+          error: "slot_indisponivel",
+        })
+      );
+    }
+    throw error;
+  }
+
+  redirect(`/agendamento/${appointmentId}`);
 }

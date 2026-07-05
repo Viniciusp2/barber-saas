@@ -1,7 +1,12 @@
 import { prisma } from "@/lib/prisma";
 
-/** Granularidade da grade de horários oferecidos ao cliente. */
-const SLOT_INTERVAL_MINUTES = 60;
+/**
+ * Passo (em minutos) entre os horários de início candidatos. Não confundir
+ * com a duração do serviço: o passo só define a granularidade dos possíveis
+ * inícios (ex: 11:00, 11:15, 11:30...); quanto tempo cada um ocupa depende
+ * da duração do Service escolhido, calculada em getAvailableSlots.
+ */
+const DEFAULT_SLOT_STEP_MINUTES = 15;
 
 export interface TimeSlot {
   start: Date;
@@ -11,7 +16,8 @@ export interface TimeSlot {
 export async function getAvailableSlots(
   staffId: string,
   serviceId: string,
-  date: Date
+  date: Date,
+  stepMinutes: number = DEFAULT_SLOT_STEP_MINUTES
 ): Promise<TimeSlot[]> {
   const [staff, service] = await Promise.all([
     prisma.staff.findUnique({ where: { id: staffId } }),
@@ -81,7 +87,7 @@ export async function getAvailableSlots(
   for (
     let slotStart = businessStart;
     addMinutes(slotStart, service.durationMin) <= businessEnd;
-    slotStart = addMinutes(slotStart, SLOT_INTERVAL_MINUTES)
+    slotStart = addMinutes(slotStart, stepMinutes)
   ) {
     if (slotStart < now) {
       continue;
