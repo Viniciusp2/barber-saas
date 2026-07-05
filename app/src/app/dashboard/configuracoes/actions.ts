@@ -27,6 +27,8 @@ export async function updateBarbershop(formData: FormData) {
     timezone: formData.get("timezone"),
   });
 
+  const autoConfirmAppointments = formData.get("autoConfirmAppointments") === "on";
+
   let whatsappNumber: string | null = null;
   if (data.whatsappNumber) {
     whatsappNumber = normalizeWhatsappDigits(data.whatsappNumber);
@@ -46,6 +48,7 @@ export async function updateBarbershop(formData: FormData) {
       description: data.description,
       timezone: data.timezone,
       whatsappNumber,
+      autoConfirmAppointments,
     },
   });
 

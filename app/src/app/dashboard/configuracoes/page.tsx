@@ -98,6 +98,27 @@ export default async function ConfiguracoesPage() {
           </select>
         </div>
 
+        <label
+          htmlFor="autoConfirmAppointments"
+          className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3"
+        >
+          <input
+            id="autoConfirmAppointments"
+            name="autoConfirmAppointments"
+            type="checkbox"
+            defaultChecked={barbershop.autoConfirmAppointments}
+            className="mt-1 size-4"
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium">Confirmar agendamentos automaticamente</span>
+            <span className="text-xs text-muted-foreground">
+              Quando ligado, todo agendamento novo já entra como Confirmado, sem esperar
+              você aprovar. Quando desligado (padrão), todo agendamento novo entra como
+              Pendente até você confirmar.
+            </span>
+          </span>
+        </label>
+
         <Button type="submit" className="mt-2 self-start">
           Salvar alterações
         </Button>

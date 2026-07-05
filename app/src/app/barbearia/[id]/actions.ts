@@ -95,6 +95,11 @@ export async function createAppointmentAction(formData: FormData) {
     );
   }
 
+  const barbershop = await prisma.barbershop.findUnique({
+    where: { id: barbershopId },
+    select: { autoConfirmAppointments: true },
+  });
+
   const appointment = await prisma.appointment.create({
     data: {
       clientId,
@@ -102,7 +107,7 @@ export async function createAppointmentAction(formData: FormData) {
       serviceId,
       barbershopId,
       date: startDate,
-      status: "PENDING",
+      status: barbershop?.autoConfirmAppointments ? "CONFIRMED" : "PENDING",
     },
   });
 

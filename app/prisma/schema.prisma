@@ -48,6 +48,9 @@ model Barbershop {
   /// Número de WhatsApp da barbearia, normalizado (E.164 só com dígitos, ex: "5591982220024").
   whatsappNumber String?
 
+  /// Se true, novos agendamentos já nascem CONFIRMED em vez de PENDING.
+  autoConfirmAppointments Boolean @default(false)
+
   ownerId     String
   owner       User          @relation("OwnerBarbershop", fields: [ownerId], references: [id])
 
