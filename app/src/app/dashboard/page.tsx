@@ -1,6 +1,8 @@
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { requireBarbershop } from "@/lib/get-current-barbershop";
 import { prisma } from "@/lib/prisma";
+import { completeAppointment } from "./agendamentos/actions";
 
 const statusLabels: Record<string, string> = {
   PENDING: "Pendente",
@@ -107,11 +109,21 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusClasses[appointment.status]}`}
-                >
-                  {statusLabels[appointment.status]}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClasses[appointment.status]}`}
+                  >
+                    {statusLabels[appointment.status]}
+                  </span>
+                  {appointment.status === "CONFIRMED" && (
+                    <form action={completeAppointment}>
+                      <input type="hidden" name="id" value={appointment.id} />
+                      <Button type="submit" variant="ghost" size="sm">
+                        Marcar como feito
+                      </Button>
+                    </form>
+                  )}
+                </div>
               </div>
             ))}
           </div>
