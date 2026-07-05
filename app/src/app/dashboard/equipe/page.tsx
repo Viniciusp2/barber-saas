@@ -21,6 +21,7 @@ export default async function EquipePage() {
 
   const staff = await prisma.staff.findMany({
     where: { barbershopId: barbershop.id },
+    include: { workingHours: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -50,46 +51,49 @@ export default async function EquipePage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Folga</TableHead>
+              <TableHead>Dias que trabalha</TableHead>
               <TableHead className="w-0 text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {staff.map((member) => (
-              <TableRow key={member.id}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs">
-                      {member.name.charAt(0).toUpperCase()}
-                    </span>
-                    {member.name}
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {member.daysOff.length === 0
-                    ? "Nenhum"
-                    : member.daysOff
-                        .slice()
-                        .sort()
-                        .map((day) => weekDayLabels[day])
-                        .join(", ")}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-2">
-                    <Link href={`/dashboard/equipe/${member.id}/editar`}>
-                      <Button variant="ghost" size="sm">
-                        Editar
-                      </Button>
-                    </Link>
-                    <DeleteButton
-                      action={deleteStaff}
-                      confirmMessage={`Remover "${member.name}" da equipe?`}
-                      hiddenFields={{ id: member.id }}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {staff.map((member) => {
+              const openDays = member.workingHours
+                .filter((wh) => wh.isOpen)
+                .map((wh) => wh.weekday)
+                .sort();
+
+              return (
+                <TableRow key={member.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs">
+                        {member.name.charAt(0).toUpperCase()}
+                      </span>
+                      {member.name}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {openDays.length === 0
+                      ? "Sem expediente definido"
+                      : openDays.map((day) => weekDayLabels[day]).join(", ")}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link href={`/dashboard/equipe/${member.id}/editar`}>
+                        <Button variant="ghost" size="sm">
+                          Editar
+                        </Button>
+                      </Link>
+                      <DeleteButton
+                        action={deleteStaff}
+                        confirmMessage={`Remover "${member.name}" da equipe?`}
+                        hiddenFields={{ id: member.id }}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}

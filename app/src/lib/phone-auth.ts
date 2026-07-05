@@ -15,6 +15,20 @@ export function normalizePhone(input: string): string {
   return `+${withCountryCode}`;
 }
 
+/**
+ * Normaliza um número de WhatsApp para E.164 só com dígitos (sem "+"), ex:
+ * "5591982220024". Usado para montar links wa.me. Retorna null se, depois
+ * de normalizado, tiver menos de 12 dígitos (DDI+DDD+número mínimo).
+ */
+export function normalizeWhatsappDigits(input: string): string | null {
+  const digits = input.replace(/\D/g, "");
+  const withCountryCode = digits.startsWith("55") ? digits : `55${digits}`;
+  if (withCountryCode.length < 12) {
+    return null;
+  }
+  return withCountryCode;
+}
+
 /** Formata um telefone normalizado (+55DDDNUMERO) para exibição: (DD) 9XXXX-XXXX. */
 export function formatPhoneDisplay(rawPhone: string): string {
   const digits = rawPhone.replace(/\D/g, "").replace(/^55/, "");

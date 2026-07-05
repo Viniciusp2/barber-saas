@@ -31,10 +31,13 @@ export default async function EditarMembroPage({
     notFound();
   }
 
-  const timeOffs = await prisma.staffTimeOff.findMany({
-    where: { staffId: member.id, endAt: { gte: new Date() } },
-    orderBy: { startAt: "asc" },
-  });
+  const [timeOffs, workingHours] = await Promise.all([
+    prisma.staffTimeOff.findMany({
+      where: { staffId: member.id, endAt: { gte: new Date() } },
+      orderBy: { startAt: "asc" },
+    }),
+    prisma.workingHours.findMany({ where: { staffId: member.id } }),
+  ]);
 
   const updateStaffWithId = updateStaff.bind(null, member.id);
 
@@ -49,6 +52,9 @@ export default async function EditarMembroPage({
         action={updateStaffWithId}
         submitLabel="Salvar alterações"
         defaultValues={member}
+        workingHours={workingHours}
+        defaultOpeningHour={barbershop.openingHour}
+        defaultClosingHour={barbershop.closingHour}
       />
 
       <Card className="max-w-lg">

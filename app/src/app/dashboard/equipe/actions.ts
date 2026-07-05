@@ -6,29 +6,70 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireBarbershop } from "@/lib/get-current-barbershop";
 
-const schema = z.object({
+const staffSchema = z.object({
   name: z.string().min(2, "Nome muito curto"),
   avatar: z.string().url("URL inválida").optional().or(z.literal("")),
-  daysOff: z.array(z.coerce.number().int().min(0).max(6)),
 });
 
 function parseStaffForm(formData: FormData) {
-  const parsed = schema.parse({
+  const parsed = staffSchema.parse({
     name: formData.get("name"),
     avatar: formData.get("avatar") || undefined,
-    daysOff: formData.getAll("daysOff"),
   });
 
-  return { name: parsed.name, avatar: parsed.avatar || null, daysOff: parsed.daysOff };
+  return { name: parsed.name, avatar: parsed.avatar || null };
+}
+
+const timeRegex = /^\d{2}:\d{2}$/;
+
+function parseWorkingHoursForm(formData: FormData) {
+  const rows = [];
+
+  for (let weekday = 0; weekday <= 6; weekday++) {
+    const isOpen = formData.get(`wh_${weekday}_isOpen`) === "on";
+    const startTime = String(formData.get(`wh_${weekday}_startTime`) ?? "");
+    const endTime = String(formData.get(`wh_${weekday}_endTime`) ?? "");
+    const breakStartRaw = String(formData.get(`wh_${weekday}_breakStart`) ?? "");
+    const breakEndRaw = String(formData.get(`wh_${weekday}_breakEnd`) ?? "");
+
+    const hasValidBreak = timeRegex.test(breakStartRaw) && timeRegex.test(breakEndRaw);
+
+    rows.push({
+      weekday,
+      isOpen,
+      startTime: timeRegex.test(startTime) ? startTime : "09:00",
+      endTime: timeRegex.test(endTime) ? endTime : "18:00",
+      breakStart: hasValidBreak ? breakStartRaw : null,
+      breakEnd: hasValidBreak ? breakEndRaw : null,
+    });
+  }
+
+  return rows;
+}
+
+async function saveWorkingHours(staffId: string, formData: FormData) {
+  const rows = parseWorkingHoursForm(formData);
+
+  await prisma.$transaction(
+    rows.map((row) =>
+      prisma.workingHours.upsert({
+        where: { staffId_weekday: { staffId, weekday: row.weekday } },
+        update: row,
+        create: { ...row, staffId },
+      })
+    )
+  );
 }
 
 export async function createStaff(formData: FormData) {
   const { barbershop } = await requireBarbershop();
   const data = parseStaffForm(formData);
 
-  await prisma.staff.create({
+  const staff = await prisma.staff.create({
     data: { ...data, barbershopId: barbershop.id },
   });
+
+  await saveWorkingHours(staff.id, formData);
 
   revalidatePath("/dashboard/equipe");
   redirect("/dashboard/equipe");
@@ -38,10 +79,13 @@ export async function updateStaff(id: string, formData: FormData) {
   const { barbershop } = await requireBarbershop();
   const data = parseStaffForm(formData);
 
-  await prisma.staff.updateMany({
-    where: { id, barbershopId: barbershop.id },
-    data,
-  });
+  const staff = await prisma.staff.findFirst({ where: { id, barbershopId: barbershop.id } });
+  if (!staff) {
+    throw new Error("Barbeiro não encontrado.");
+  }
+
+  await prisma.staff.update({ where: { id: staff.id }, data });
+  await saveWorkingHours(staff.id, formData);
 
   revalidatePath("/dashboard/equipe");
   redirect("/dashboard/equipe");

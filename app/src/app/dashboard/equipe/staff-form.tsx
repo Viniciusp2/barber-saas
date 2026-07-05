@@ -2,29 +2,55 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+interface WorkingHoursRow {
+  weekday: number;
+  isOpen: boolean;
+  startTime: string;
+  endTime: string;
+  breakStart: string | null;
+  breakEnd: string | null;
+}
+
 interface StaffFormProps {
   action: (formData: FormData) => void | Promise<void>;
   defaultValues?: {
     name: string;
     avatar: string | null;
-    daysOff: number[];
   };
+  /** Expediente atual (editar) ou vazio (novo membro). */
+  workingHours?: WorkingHoursRow[];
+  /** Usados como padrão de horário ao criar um novo membro. */
+  defaultOpeningHour: number;
+  defaultClosingHour: number;
   submitLabel: string;
 }
 
 const weekDays = [
-  { value: 0, label: "Dom" },
-  { value: 1, label: "Seg" },
-  { value: 2, label: "Ter" },
-  { value: 3, label: "Qua" },
-  { value: 4, label: "Qui" },
-  { value: 5, label: "Sex" },
-  { value: 6, label: "Sáb" },
+  { value: 0, label: "Domingo" },
+  { value: 1, label: "Segunda" },
+  { value: 2, label: "Terça" },
+  { value: 3, label: "Quarta" },
+  { value: 4, label: "Quinta" },
+  { value: 5, label: "Sexta" },
+  { value: 6, label: "Sábado" },
 ];
 
-export function StaffForm({ action, defaultValues, submitLabel }: StaffFormProps) {
+function toTimeString(hour: number) {
+  return `${String(hour).padStart(2, "0")}:00`;
+}
+
+export function StaffForm({
+  action,
+  defaultValues,
+  workingHours,
+  defaultOpeningHour,
+  defaultClosingHour,
+  submitLabel,
+}: StaffFormProps) {
+  const hoursByWeekday = new Map(workingHours?.map((wh) => [wh.weekday, wh]));
+
   return (
-    <form action={action} className="flex max-w-lg flex-col gap-4">
+    <form action={action} className="flex max-w-2xl flex-col gap-6">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="name" className="text-sm font-medium">
           Nome do barbeiro
@@ -51,24 +77,63 @@ export function StaffForm({ action, defaultValues, submitLabel }: StaffFormProps
         />
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium">Dias de folga</span>
-        <div className="flex flex-wrap gap-2">
-          {weekDays.map((day) => (
-            <label
-              key={day.value}
-              className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm has-checked:border-primary has-checked:bg-primary/10"
-            >
-              <input
-                type="checkbox"
-                name="daysOff"
-                value={day.value}
-                defaultChecked={defaultValues?.daysOff.includes(day.value)}
-                className="size-4 accent-primary"
-              />
-              {day.label}
-            </label>
-          ))}
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium">Expediente</span>
+        <p className="text-xs text-muted-foreground">
+          Marque os dias em que ele trabalha e defina o horário. O intervalo (almoço) é opcional.
+        </p>
+
+        <div className="flex flex-col divide-y divide-border rounded-lg border border-border">
+          {weekDays.map((day) => {
+            const wh = hoursByWeekday.get(day.value);
+            const isOpen = wh ? wh.isOpen : true;
+            const startTime = wh?.startTime ?? toTimeString(defaultOpeningHour);
+            const endTime = wh?.endTime ?? toTimeString(defaultClosingHour);
+
+            return (
+              <div key={day.value} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
+                <label className="flex w-32 shrink-0 cursor-pointer items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    name={`wh_${day.value}_isOpen`}
+                    defaultChecked={isOpen}
+                    className="size-4 accent-primary"
+                  />
+                  {day.label}
+                </label>
+
+                <div className="flex flex-1 flex-wrap items-center gap-2 text-sm">
+                  <Input
+                    type="time"
+                    name={`wh_${day.value}_startTime`}
+                    defaultValue={startTime}
+                    className="w-28"
+                  />
+                  <span className="text-muted-foreground">até</span>
+                  <Input
+                    type="time"
+                    name={`wh_${day.value}_endTime`}
+                    defaultValue={endTime}
+                    className="w-28"
+                  />
+                  <span className="ml-2 text-muted-foreground">Intervalo:</span>
+                  <Input
+                    type="time"
+                    name={`wh_${day.value}_breakStart`}
+                    defaultValue={wh?.breakStart ?? ""}
+                    className="w-28"
+                  />
+                  <span className="text-muted-foreground">até</span>
+                  <Input
+                    type="time"
+                    name={`wh_${day.value}_breakEnd`}
+                    defaultValue={wh?.breakEnd ?? ""}
+                    className="w-28"
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

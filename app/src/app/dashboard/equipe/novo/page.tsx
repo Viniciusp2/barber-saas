@@ -1,7 +1,10 @@
+import { requireBarbershop } from "@/lib/get-current-barbershop";
 import { StaffForm } from "../staff-form";
 import { createStaff } from "../actions";
 
-export default function NovoMembroPage() {
+export default async function NovoMembroPage() {
+  const { barbershop } = await requireBarbershop();
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -11,7 +14,12 @@ export default function NovoMembroPage() {
         </p>
       </div>
 
-      <StaffForm action={createStaff} submitLabel="Adicionar membro" />
+      <StaffForm
+        action={createStaff}
+        submitLabel="Adicionar membro"
+        defaultOpeningHour={barbershop.openingHour}
+        defaultClosingHour={barbershop.closingHour}
+      />
     </div>
   );
 }

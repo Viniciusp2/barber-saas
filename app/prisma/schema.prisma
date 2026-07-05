@@ -37,10 +37,16 @@ model Barbershop {
   phone       String?
   description String?
 
-  /// Hora de abertura (0-23), mesma para todos os dias da semana por enquanto.
+  /// Hora de abertura (0-23) usada como padrão ao criar um novo membro da equipe.
   openingHour Int           @default(9)
-  /// Hora de fechamento (0-23), mesma para todos os dias da semana por enquanto.
+  /// Hora de fechamento (0-23) usada como padrão ao criar um novo membro da equipe.
   closingHour Int           @default(19)
+
+  /// Fuso horário IANA da barbearia (ex: "America/Sao_Paulo", "America/Belem").
+  timezone    String        @default("America/Sao_Paulo")
+
+  /// Número de WhatsApp da barbearia, normalizado (E.164 só com dígitos, ex: "5591982220024").
+  whatsappNumber String?
 
   ownerId     String
   owner       User          @relation("OwnerBarbershop", fields: [ownerId], references: [id])
@@ -59,16 +65,34 @@ model Staff {
   name         String
   avatar       String?
 
-  /// Dias da semana em que o barbeiro NÃO trabalha (0=domingo ... 6=sábado).
-  daysOff      Int[]         @default([])
-
   barbershopId String
   barbershop   Barbershop    @relation(fields: [barbershopId], references: [id])
 
   appointments Appointment[]
   timeOffs     StaffTimeOff[]
+  workingHours WorkingHours[]
 
   createdAt    DateTime       @default(now())
+}
+
+/// Expediente do barbeiro por dia da semana: se trabalha, horário de
+/// início/fim e um intervalo opcional (almoço). Uma linha por dia (0-6).
+/// Ausência de linha para um weekday == não trabalha nesse dia.
+model WorkingHours {
+  id      String @id @default(cuid())
+  staffId String
+  staff   Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  /// 0 = domingo ... 6 = sábado
+  weekday Int
+
+  isOpen     Boolean @default(true)
+  startTime  String // "09:00"
+  endTime    String // "18:00"
+  breakStart String? // "12:00"
+  breakEnd   String? // "13:00"
+
+  @@unique([staffId, weekday])
 }
 
 /// Bloqueios pontuais de horário do barbeiro: folga de algumas horas,

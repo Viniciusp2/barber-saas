@@ -14,10 +14,7 @@ export async function getAvailableSlots(
   date: Date
 ): Promise<TimeSlot[]> {
   const [staff, service] = await Promise.all([
-    prisma.staff.findUnique({
-      where: { id: staffId },
-      include: { barbershop: { select: { id: true, openingHour: true, closingHour: true } } },
-    }),
+    prisma.staff.findUnique({ where: { id: staffId } }),
     prisma.service.findUnique({ where: { id: serviceId } }),
   ]);
 
@@ -31,16 +28,19 @@ export async function getAvailableSlots(
     throw new Error("O barbeiro e o serviço pertencem a barbearias diferentes.");
   }
 
-  if (staff.daysOff.includes(date.getDay())) {
+  const weekday = date.getDay();
+  const workingHours = await prisma.workingHours.findUnique({
+    where: { staffId_weekday: { staffId, weekday } },
+  });
+
+  if (!workingHours || !workingHours.isOpen) {
     return [];
   }
 
-  const { openingHour, closingHour } = staff.barbershop;
-
   const dayStart = startOfDay(date);
   const dayEnd = endOfDay(date);
-  const businessStart = addMinutes(dayStart, openingHour * 60);
-  const businessEnd = addMinutes(dayStart, closingHour * 60);
+  const businessStart = combineDateAndTime(dayStart, workingHours.startTime);
+  const businessEnd = combineDateAndTime(dayStart, workingHours.endTime);
 
   const [existingAppointments, timeOffs] = await Promise.all([
     prisma.appointment.findMany({
@@ -67,6 +67,13 @@ export async function getAvailableSlots(
     })),
     ...timeOffs.map((timeOff) => ({ start: timeOff.startAt, end: timeOff.endAt })),
   ];
+
+  if (workingHours.breakStart && workingHours.breakEnd) {
+    busySlots.push({
+      start: combineDateAndTime(dayStart, workingHours.breakStart),
+      end: combineDateAndTime(dayStart, workingHours.breakEnd),
+    });
+  }
 
   const now = new Date();
   const availableSlots: TimeSlot[] = [];
@@ -143,6 +150,14 @@ function endOfDay(date: Date): Date {
 
 function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60_000);
+}
+
+/** Combina um Date (só a parte da data importa) com um horário "HH:MM" local. */
+function combineDateAndTime(date: Date, time: string): Date {
+  const [hour, minute] = time.split(":").map(Number);
+  const result = new Date(date);
+  result.setHours(hour, minute, 0, 0);
+  return result;
 }
 
 /**

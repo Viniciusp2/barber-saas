@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { requestMagicLinkAction, createAppointmentAction } from "./actions";
 import { formatPhoneDisplay } from "@/lib/phone-auth";
+import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import {
   IconScissors,
   IconShuffle,
@@ -33,6 +34,7 @@ interface SearchParams {
   phone?: string;
   error?: string;
   success?: string;
+  appointmentId?: string;
 }
 
 const errorMessages: Record<string, string> = {
@@ -116,9 +118,34 @@ export default async function BarbershopPublicPage({
   }
 
   if (sp.success) {
+    const appointment = sp.appointmentId
+      ? await prisma.appointment.findFirst({
+          where: { id: sp.appointmentId, barbershopId: barbershop.id },
+          include: { service: true, staff: true },
+        })
+      : null;
+
+    let googleCalendarUrl: string | null = null;
+    if (appointment) {
+      const start = appointment.date;
+      const end = new Date(start.getTime() + appointment.service.durationMin * 60_000);
+      googleCalendarUrl = buildGoogleCalendarUrl({
+        uid: `appointment-${appointment.id}@barber-saas`,
+        title: `${appointment.service.name} — ${barbershop.name}`,
+        description: `Agendamento com ${appointment.staff.name} na ${barbershop.name}.`,
+        location: barbershop.address ?? barbershop.name,
+        start,
+        end,
+      });
+    }
+
+    const whatsappUrl = barbershop.whatsappNumber
+      ? `https://wa.me/${barbershop.whatsappNumber}`
+      : null;
+
     return (
       <div className="theme-light-forced min-h-screen">
-        <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 px-6 py-12 text-center">
           <div className="animate-scale-in flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
             <IconCheckCircle className="size-10" />
           </div>
@@ -132,10 +159,55 @@ export default async function BarbershopPublicPage({
               {barbershop.name}.
             </p>
           </div>
+
+          {appointment && (
+            <Card
+              className="animate-fade-in-up w-full text-left shadow-sm"
+              style={{ animationDelay: "0.25s" }}
+            >
+              <div className="flex flex-col gap-3 p-5">
+                <h2 className="flex items-center gap-2 text-sm font-semibold">
+                  <IconCalendar className="size-4 text-primary" />
+                  Adicionar à minha agenda
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Opcional — se preferir, é só fechar essa tela.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {googleCalendarUrl && (
+                    <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm">
+                        Google Agenda
+                      </Button>
+                    </a>
+                  )}
+                  <a href={`/api/appointments/${appointment.id}/ics`}>
+                    <Button variant="outline" size="sm">
+                      Baixar .ics (iPhone/Outlook)
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {whatsappUrl && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="animate-fade-in-up flex items-center gap-2 text-sm text-emerald-600 underline"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <IconWhatsapp className="size-4" />
+              Falar com a barbearia no WhatsApp
+            </a>
+          )}
+
           <Link
             href={`/barbearia/${barbershop.id}`}
             className="animate-fade-in-up"
-            style={{ animationDelay: "0.3s" }}
+            style={{ animationDelay: "0.35s" }}
           >
             <Button>Fazer outro agendamento</Button>
           </Link>
