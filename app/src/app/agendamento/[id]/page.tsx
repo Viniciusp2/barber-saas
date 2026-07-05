@@ -84,16 +84,20 @@ export default async function AgendamentoPage({
         <ThemeSwitcher />
       </div>
       <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center gap-4 px-6 py-12">
-        <div className="animate-scale-in flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <div
+          className={`animate-bounce-in flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary ${
+            canManage ? "animate-pulse-ring" : ""
+          }`}
+        >
           <IconCheckCircle className="size-8" />
         </div>
 
-        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.1s" }}>
+        <div className="animate-fade-in-up text-center" style={{ animationDelay: "0.15s" }}>
           <h1 className="font-display text-2xl font-semibold">Agendamento confirmado</h1>
           <p className="mt-1 text-sm text-muted-foreground">{countdownLabel(appointment.status, days)}</p>
         </div>
 
-        <Card className="animate-fade-in-up w-full shadow-sm" style={{ animationDelay: "0.15s" }}>
+        <Card className="animate-card-in w-full shadow-sm" style={{ animationDelay: "0.2s" }}>
           <div className="flex flex-col gap-4 p-5">
             <div className="flex items-center gap-3">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-medium">
@@ -106,26 +110,26 @@ export default async function AgendamentoPage({
             </div>
 
             <div className="flex flex-col gap-2 border-t border-border pt-4 text-sm">
-              <div className="flex items-center justify-between gap-4">
+              <div className="animate-fade-in-up flex items-center justify-between gap-4" style={{ animationDelay: "0.28s" }}>
                 <span className="text-muted-foreground">Serviço</span>
                 <span className="text-right font-medium">
                   {service.name} · {service.durationMin} min
                 </span>
               </div>
-              <div className="flex items-center justify-between gap-4">
+              <div className="animate-fade-in-up flex items-center justify-between gap-4" style={{ animationDelay: "0.32s" }}>
                 <span className="text-muted-foreground">Data</span>
                 <span className="text-right font-medium capitalize">{formatDate(start)}</span>
               </div>
-              <div className="flex items-center justify-between gap-4">
+              <div className="animate-fade-in-up flex items-center justify-between gap-4" style={{ animationDelay: "0.36s" }}>
                 <span className="text-muted-foreground">Horário</span>
                 <span className="text-right font-medium">{formatTime(start)}</span>
               </div>
-              <div className="flex items-center justify-between gap-4">
+              <div className="animate-fade-in-up flex items-center justify-between gap-4" style={{ animationDelay: "0.4s" }}>
                 <span className="text-muted-foreground">Valor</span>
                 <span className="text-right font-medium">{formatPrice(service.price)}</span>
               </div>
               {barbershop.address && (
-                <div className="flex items-center justify-between gap-4">
+                <div className="animate-fade-in-up flex items-center justify-between gap-4" style={{ animationDelay: "0.44s" }}>
                   <span className="shrink-0 text-muted-foreground">Endereço</span>
                   <span className="text-right font-medium">{barbershop.address}</span>
                 </div>
@@ -134,7 +138,7 @@ export default async function AgendamentoPage({
           </div>
         </Card>
 
-        <div className="animate-fade-in-up flex w-full flex-col gap-2" style={{ animationDelay: "0.2s" }}>
+        <div className="animate-fade-in-up flex w-full flex-col gap-2" style={{ animationDelay: "0.48s" }}>
           <div className="flex gap-2">
             <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
               <Button variant="outline" className="w-full">
@@ -156,7 +160,7 @@ export default async function AgendamentoPage({
         {canManage && (
           <div
             className="animate-fade-in-up flex w-full items-center justify-center gap-2"
-            style={{ animationDelay: "0.25s" }}
+            style={{ animationDelay: "0.52s" }}
           >
             <form action={rescheduleMyAppointment} className="flex-1">
               <input type="hidden" name="id" value={appointment.id} />

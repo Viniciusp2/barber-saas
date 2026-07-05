@@ -68,18 +68,18 @@ function StepBadge({ number, label, state }: { number: number; label: string; st
   return (
     <div className="flex items-center gap-2">
       <span
-        className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+        className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all duration-300 ${
           state === "done"
-            ? "bg-primary text-primary-foreground"
+            ? "animate-bounce-in bg-primary bg-gradient-brand text-primary-foreground"
             : state === "active"
-              ? "bg-primary text-primary-foreground"
+              ? "animate-pulse-ring bg-primary bg-gradient-brand text-primary-foreground"
               : "bg-secondary text-muted-foreground"
         }`}
       >
         {state === "done" ? <IconCheckCircle className="size-4" /> : number}
       </span>
       <span
-        className={`hidden text-sm font-medium sm:block ${
+        className={`hidden text-sm font-medium transition-colors sm:block ${
           state === "todo" ? "text-muted-foreground" : "text-foreground"
         }`}
       >
@@ -143,6 +143,8 @@ export default async function BarbershopPublicPage({
     return groups;
   }, {});
 
+  let slotAnimIndex = 0;
+
   return (
     <div className="relative min-h-screen">
       <div className="absolute right-4 top-4 z-10">
@@ -150,7 +152,7 @@ export default async function BarbershopPublicPage({
       </div>
       <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12 md:py-16">
         <header className="animate-fade-in-up text-center">
-          <span className="font-display text-sm font-medium uppercase tracking-[0.2em] text-primary">
+          <span className="text-gradient-brand animate-gradient-move font-display text-sm font-medium uppercase tracking-[0.2em]">
             Agende seu horário
           </span>
           <h1 className="mt-2 font-display text-4xl font-semibold">{barbershop.name}</h1>
@@ -158,7 +160,7 @@ export default async function BarbershopPublicPage({
             <div className="mt-3 flex flex-col items-center gap-1 text-sm text-muted-foreground">
               {barbershop.address && (
                 <span className="flex items-center gap-1.5">
-                  <IconMapPin className="size-4 text-primary" />
+                  <IconMapPin className="animate-float size-4 text-primary" />
                   {barbershop.address}
                 </span>
               )}
@@ -169,7 +171,7 @@ export default async function BarbershopPublicPage({
 
         <div
           className="animate-fade-in-up flex items-center justify-center gap-4 sm:gap-8"
-          style={{ animationDelay: "0.05s" }}
+          style={{ animationDelay: "0.08s" }}
         >
           <StepBadge number={1} label="Serviço" state={step > 1 ? "done" : "active"} />
           <span className="h-px w-8 bg-border sm:w-16" />
@@ -179,12 +181,12 @@ export default async function BarbershopPublicPage({
         </div>
 
         {sp.error && (
-          <p className="animate-fade-in-up rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-sm text-destructive">
+          <p className="animate-bounce-in rounded-md border border-destructive/30 bg-destructive/10 px-4 py-2 text-center text-sm text-destructive">
             {errorMessages[sp.error] ?? "Algo deu errado."}
           </p>
         )}
 
-        <Card className="animate-fade-in-up shadow-sm" style={{ animationDelay: "0.1s" }}>
+        <Card className="animate-card-in shadow-sm" style={{ animationDelay: "0.12s" }}>
           <form method="GET" className="flex flex-col gap-5 p-6">
             <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
               <IconScissors className="size-5 text-primary" />
@@ -194,10 +196,11 @@ export default async function BarbershopPublicPage({
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium">Serviço</span>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {barbershop.services.map((service) => (
+                {barbershop.services.map((service, index) => (
                   <label
                     key={service.id}
-                    className="flex cursor-pointer flex-col gap-0.5 rounded-lg border border-border p-3 text-sm transition-colors has-checked:border-primary has-checked:bg-primary/5"
+                    style={{ animationDelay: `${0.15 + index * 0.04}s` }}
+                    className="animate-fade-in-up flex cursor-pointer flex-col gap-0.5 rounded-lg border border-border p-3 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm has-checked:scale-[1.02] has-checked:border-primary has-checked:bg-primary/5 has-checked:shadow-sm"
                   >
                     <input
                       type="radio"
@@ -219,7 +222,10 @@ export default async function BarbershopPublicPage({
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium">Barbeiro</span>
               <div className="flex flex-wrap gap-2">
-                <label className="flex cursor-pointer items-center gap-2 rounded-full border border-border py-1.5 pl-2 pr-3 text-sm transition-colors has-checked:border-primary has-checked:bg-primary/5">
+                <label
+                  style={{ animationDelay: "0.2s" }}
+                  className="animate-fade-in-up flex cursor-pointer items-center gap-2 rounded-full border border-border py-1.5 pl-2 pr-3 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 has-checked:scale-[1.03] has-checked:border-primary has-checked:bg-primary/5 has-checked:shadow-sm"
+                >
                   <input
                     type="radio"
                     name="staffId"
@@ -233,10 +239,11 @@ export default async function BarbershopPublicPage({
                   </span>
                   Qualquer um
                 </label>
-                {barbershop.staff.map((member) => (
+                {barbershop.staff.map((member, index) => (
                   <label
                     key={member.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-full border border-border py-1.5 pl-2 pr-3 text-sm transition-colors has-checked:border-primary has-checked:bg-primary/5"
+                    style={{ animationDelay: `${0.24 + index * 0.04}s` }}
+                    className="animate-fade-in-up flex cursor-pointer items-center gap-2 rounded-full border border-border py-1.5 pl-2 pr-3 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 has-checked:scale-[1.03] has-checked:border-primary has-checked:bg-primary/5 has-checked:shadow-sm"
                   >
                     <input
                       type="radio"
@@ -278,14 +285,14 @@ export default async function BarbershopPublicPage({
         </Card>
 
         {hasSelection && (
-          <Card className="animate-fade-in-up shadow-sm">
+          <Card className="animate-card-in shadow-sm">
             <div className="flex flex-col gap-4 p-6">
               <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-                <IconClock className="size-5 text-primary" />
+                <IconClock className="animate-float size-5 text-primary" />
                 Escolha o horário
               </h2>
               {slots.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="animate-fade-in-up text-sm text-muted-foreground">
                   Nenhum horário livre nesse dia. Tente outra data.
                 </p>
               ) : (
@@ -304,8 +311,14 @@ export default async function BarbershopPublicPage({
                             date: sp.date,
                             slot: slotOption.start.toISOString(),
                           });
+                          const delay = 0.02 * slotAnimIndex++;
                           return (
-                            <Link key={slotOption.start.toISOString()} href={href}>
+                            <Link
+                              key={slotOption.start.toISOString()}
+                              href={href}
+                              className="animate-scale-in inline-block"
+                              style={{ animationDelay: `${delay}s` }}
+                            >
                               <Button variant={isSelected ? "primary" : "outline"} size="sm">
                                 {formatTime(slotOption.start)}
                               </Button>
@@ -322,11 +335,11 @@ export default async function BarbershopPublicPage({
         )}
 
         {selectedSlot && selectedService && (
-          <Card className="animate-fade-in-up shadow-sm">
+          <Card className="animate-card-in shadow-sm">
             <div className="flex flex-col gap-4 p-6">
               <h2 className="font-display text-lg font-semibold">Confirme seus dados</h2>
               <div className="flex items-center gap-3 rounded-lg bg-secondary/60 p-3 text-sm">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <span className="animate-bounce-in flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <IconScissors className="size-4" />
                 </span>
                 <div>
