@@ -27,64 +27,122 @@
   --sidebar-foreground: #e7e5e4;
   --sidebar-muted: #a8a29e;
   --sidebar-active: #292524;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0a09;
-    --foreground: #f5f5f4;
-
-    --card: #171412;
-    --card-foreground: #f5f5f4;
-
-    --primary: #e08a2c;
-    --primary-foreground: #1c1917;
-
-    --secondary: #24201d;
-    --secondary-foreground: #f5f5f4;
-
-    --muted: #24201d;
-    --muted-foreground: #a8a29e;
-
-    --border: #2b2622;
-
-    --destructive: #ef4444;
-    --destructive-foreground: #1c1917;
-
-    --sidebar: #0c0a09;
-    --sidebar-foreground: #e7e5e4;
-    --sidebar-muted: #78716c;
-    --sidebar-active: #1c1917;
-  }
+  --gradient-brand: linear-gradient(135deg, #a3540f 0%, #c96f1f 100%);
+  --shadow-brand: none;
+  --bg-decoration: none;
 }
 
 /**
- * Força o tema claro independente do sistema — usado na página pública de
- * agendamento, que deve ter uma aparência de marca consistente para o cliente.
+ * Tema "Moderno": minimalista, tons neutros frios com acentos em degradê
+ * indigo -> violeta -> rosa nos elementos de destaque (botões, título de marca).
  */
-.theme-light-forced {
-  --background: #faf9f7;
-  --foreground: #1c1917;
+[data-theme="modern"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
 
   --card: #ffffff;
-  --card-foreground: #1c1917;
+  --card-foreground: #0f172a;
 
-  --primary: #a3540f;
-  --primary-foreground: #fffaf0;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
 
-  --secondary: #f0ede8;
-  --secondary-foreground: #1c1917;
+  --secondary: #eef2ff;
+  --secondary-foreground: #312e81;
 
-  --muted: #f0ede8;
-  --muted-foreground: #78716c;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 
-  --border: #e6e1da;
+  --border: #e2e8f0;
 
-  --destructive: #b91c1c;
-  --destructive-foreground: #fffaf0;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
 
-  background: var(--background);
-  color: var(--foreground);
+  --sidebar: #0f172a;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-muted: #94a3b8;
+  --sidebar-active: #1e293b;
+
+  --gradient-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  --shadow-brand: 0 8px 24px -8px rgb(99 102 241 / 0.45);
+  --bg-decoration:
+    radial-gradient(1200px circle at 100% -10%, rgba(99, 102, 241, 0.12), transparent 60%),
+    radial-gradient(800px circle at -10% 110%, rgba(236, 72, 153, 0.1), transparent 60%);
+}
+
+/**
+ * Tema "Neon": fundo escuro com acentos vibrantes ciano/magenta e brilho (glow)
+ * nos elementos de destaque.
+ */
+[data-theme="neon"] {
+  --background: #0a0118;
+  --foreground: #f5f3ff;
+
+  --card: #14092b;
+  --card-foreground: #f5f3ff;
+
+  --primary: #d946ef;
+  --primary-foreground: #0a0118;
+
+  --secondary: #1a0b33;
+  --secondary-foreground: #e9d5ff;
+
+  --muted: #1a0b33;
+  --muted-foreground: #a78bfa;
+
+  --border: #2e1065;
+
+  --destructive: #f43f5e;
+  --destructive-foreground: #0a0118;
+
+  --sidebar: #05000f;
+  --sidebar-foreground: #e9d5ff;
+  --sidebar-muted: #7c3aed;
+  --sidebar-active: #1a0b33;
+
+  --gradient-brand: linear-gradient(135deg, #22d3ee 0%, #d946ef 50%, #f43f5e 100%);
+  --shadow-brand:
+    0 0 20px rgba(217, 70, 239, 0.55),
+    0 0 40px rgba(34, 211, 238, 0.3);
+  --bg-decoration:
+    radial-gradient(1000px circle at 15% -10%, rgba(217, 70, 239, 0.18), transparent 60%),
+    radial-gradient(900px circle at 100% 100%, rgba(34, 211, 238, 0.15), transparent 60%);
+}
+
+/**
+ * Tema "Pastel": claro e suave, tons de rosa e lavanda.
+ */
+[data-theme="pastel"] {
+  --background: #fdf6f9;
+  --foreground: #3f3244;
+
+  --card: #ffffff;
+  --card-foreground: #3f3244;
+
+  --primary: #ec4899;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f3e8ff;
+  --secondary-foreground: #4c1d95;
+
+  --muted: #fce7f3;
+  --muted-foreground: #9d6b93;
+
+  --border: #f5d0e8;
+
+  --destructive: #fb7185;
+  --destructive-foreground: #ffffff;
+
+  --sidebar: #4c1d4c;
+  --sidebar-foreground: #fce7f3;
+  --sidebar-muted: #d8a9d1;
+  --sidebar-active: #5f2a5f;
+
+  --gradient-brand: linear-gradient(135deg, #f9a8d4 0%, #c4b5fd 100%);
+  --shadow-brand: 0 8px 20px -8px rgb(244 114 182 / 0.35);
+  --bg-decoration:
+    radial-gradient(900px circle at 100% -10%, rgba(244, 114, 182, 0.15), transparent 60%),
+    radial-gradient(900px circle at -10% 100%, rgba(196, 181, 253, 0.18), transparent 60%);
 }
 
 @keyframes fade-in-up {
@@ -161,6 +219,23 @@
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: var(--bg-decoration);
   color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.bg-gradient-brand {
+  background-image: var(--gradient-brand);
+}
+
+.text-gradient-brand {
+  background-image: var(--gradient-brand);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.shadow-brand {
+  box-shadow: var(--shadow-brand);
 }

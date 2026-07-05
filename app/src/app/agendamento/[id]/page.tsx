@@ -4,6 +4,7 @@ import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DeleteButton } from "@/components/ui/delete-button";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { cancelMyAppointment, rescheduleMyAppointment } from "./actions";
 import { IconCalendar, IconMapPin, IconCheckCircle } from "../../barbearia/[id]/icons";
 
@@ -78,7 +79,10 @@ export default async function AgendamentoPage({
     .join("");
 
   return (
-    <div className="theme-light-forced min-h-screen">
+    <div className="relative min-h-screen">
+      <div className="absolute right-4 top-4 z-10">
+        <ThemeSwitcher />
+      </div>
       <div className="mx-auto flex min-h-screen max-w-lg flex-col items-center gap-4 px-6 py-12">
         <div className="animate-scale-in flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <IconCheckCircle className="size-8" />

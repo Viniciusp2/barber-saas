@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { createAppointmentAction } from "./actions";
 import {
   IconScissors,
@@ -143,7 +144,10 @@ export default async function BarbershopPublicPage({
   }, {});
 
   return (
-    <div className="theme-light-forced min-h-screen">
+    <div className="relative min-h-screen">
+      <div className="absolute right-4 top-4 z-10">
+        <ThemeSwitcher />
+      </div>
       <div className="mx-auto flex max-w-2xl flex-col gap-8 px-6 py-12 md:py-16">
         <header className="animate-fade-in-up text-center">
           <span className="font-display text-sm font-medium uppercase tracking-[0.2em] text-primary">

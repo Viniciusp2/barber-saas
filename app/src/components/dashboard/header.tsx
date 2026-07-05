@@ -1,5 +1,6 @@
 import { IconMenu, IconLogout } from "./icons";
 import { ShareButton } from "./share-button";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -31,6 +32,7 @@ export function Header({
       <ShareButton barbershopId={barbershopId} barbershopName={barbershopName} />
 
       <div className="flex items-center gap-3">
+        <ThemeSwitcher className="hidden sm:flex" />
         <div className="hidden text-right sm:block">
           <p className="text-sm font-medium leading-none">{userName}</p>
           <p className="text-xs text-muted-foreground">{roleLabel}</p>

@@ -47,7 +47,7 @@ export function Sidebar({ open, onClose, barbershopName }: SidebarProps) {
       >
         <div className="flex h-16 items-center justify-between px-6">
           <span className="font-display text-xl font-semibold tracking-tight">
-            Barber<span className="text-primary">SaaS</span>
+            Barber<span className="text-gradient-brand">SaaS</span>
           </span>
           <button
             className="text-sidebar-muted md:hidden"
