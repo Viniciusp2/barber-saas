@@ -4,7 +4,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { requestPhoneMagicLink } from "@/lib/phone-auth";
+import { normalizePhone } from "@/lib/phone-auth";
 import { getAvailableSlots, formatLocalDateString } from "@/lib/availability";
 
 interface BookingUrlParams {
@@ -14,7 +14,6 @@ interface BookingUrlParams {
   slot?: string;
   name?: string;
   phone?: string;
-  sent?: string;
   error?: string;
   success?: string;
   appointmentId?: string;
@@ -27,37 +26,6 @@ function buildBookingUrl(barbershopId: string, params: BookingUrlParams): string
   }
   const query = search.toString();
   return `/barbearia/${barbershopId}${query ? `?${query}` : ""}`;
-}
-
-function readBaseParams(formData: FormData) {
-  return {
-    barbershopId: String(formData.get("barbershopId") ?? ""),
-    serviceId: String(formData.get("serviceId") ?? ""),
-    staffId: String(formData.get("staffId") ?? ""),
-    date: String(formData.get("date") ?? ""),
-    slot: String(formData.get("slot") ?? ""),
-  };
-}
-
-export async function requestMagicLinkAction(formData: FormData) {
-  const { barbershopId, serviceId, staffId, date, slot } = readBaseParams(formData);
-  const name = String(formData.get("name") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
-
-  const base = { serviceId, staffId, date, slot, name, phone };
-
-  if (!name || !phone) {
-    redirect(buildBookingUrl(barbershopId, { ...base, error: "dados_invalidos" }));
-  }
-
-  const redirectTo = buildBookingUrl(barbershopId, { serviceId, staffId, date, slot });
-  const result = await requestPhoneMagicLink(phone, name, redirectTo);
-
-  if (!result.ok) {
-    redirect(buildBookingUrl(barbershopId, { ...base, error: "link_aguarde" }));
-  }
-
-  redirect(buildBookingUrl(barbershopId, { ...base, sent: "1" }));
 }
 
 const createAppointmentSchema = z.object({
@@ -82,9 +50,35 @@ export async function createAppointmentAction(formData: FormData) {
   }
 
   const { barbershopId, staffId, serviceId, slot } = parsed.data;
+  const name = String(formData.get("name") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
 
-  if (!session?.user) {
-    redirect(buildBookingUrl(barbershopId, { serviceId, staffId, slot }));
+  let clientId: string;
+
+  if (session?.user) {
+    clientId = session.user.id;
+  } else {
+    if (!name || !phone) {
+      redirect(
+        buildBookingUrl(barbershopId, {
+          serviceId,
+          staffId,
+          date: formatLocalDateString(new Date(slot)),
+          slot,
+          name,
+          phone,
+          error: "dados_invalidos",
+        })
+      );
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+    const guest = await prisma.user.upsert({
+      where: { phone: normalizedPhone },
+      update: { name },
+      create: { phone: normalizedPhone, name, role: "USER" },
+    });
+    clientId = guest.id;
   }
 
   const startDate = new Date(slot);
@@ -105,7 +99,7 @@ export async function createAppointmentAction(formData: FormData) {
 
   const appointment = await prisma.appointment.create({
     data: {
-      clientId: session.user.id,
+      clientId,
       staffId,
       serviceId,
       barbershopId,

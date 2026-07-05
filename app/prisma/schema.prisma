@@ -187,19 +187,6 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-/// Links mágicos enviados por WhatsApp para login de clientes sem senha.
-model PhoneLoginToken {
-  id         String    @id @default(cuid())
-  phone      String
-  token      String    @unique
-  name       String?
-  expiresAt  DateTime
-  consumedAt DateTime?
-  createdAt  DateTime  @default(now())
-
-  @@index([phone])
-}
-
 /// ENUMS
 enum Role {
   USER

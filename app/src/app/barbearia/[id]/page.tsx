@@ -11,8 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { requestMagicLinkAction, createAppointmentAction } from "./actions";
-import { formatPhoneDisplay } from "@/lib/phone-auth";
+import { createAppointmentAction } from "./actions";
 import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import {
   IconScissors,
@@ -29,7 +28,6 @@ interface SearchParams {
   staffId?: string;
   date?: string;
   slot?: string;
-  sent?: string;
   name?: string;
   phone?: string;
   error?: string;
@@ -39,8 +37,6 @@ interface SearchParams {
 
 const errorMessages: Record<string, string> = {
   dados_invalidos: "Preencha nome e telefone.",
-  link_aguarde: "Aguarde um pouco antes de pedir um novo link.",
-  link_invalido: "Esse link não é mais válido. Peça um novo.",
   slot_indisponivel: "Esse horário acabou de ser reservado por outra pessoa. Escolha outro.",
 };
 
@@ -139,9 +135,13 @@ export default async function BarbershopPublicPage({
       });
     }
 
-    const whatsappUrl = barbershop.whatsappNumber
-      ? `https://wa.me/${barbershop.whatsappNumber}`
-      : null;
+    let whatsappUrl: string | null = null;
+    if (barbershop.whatsappNumber) {
+      const message = appointment
+        ? `Olá! Acabei de agendar ${appointment.service.name} com ${appointment.staff.name} no dia ${formatDate(appointment.date)} às ${formatTime(appointment.date)}.`
+        : `Olá! Acabei de agendar um horário na ${barbershop.name}.`;
+      whatsappUrl = `https://wa.me/${barbershop.whatsappNumber}?text=${encodeURIComponent(message)}`;
+    }
 
     return (
       <div className="theme-light-forced min-h-screen">
@@ -439,114 +439,40 @@ export default async function BarbershopPublicPage({
                 </div>
               </div>
 
-              {session?.user ? (
-                <form action={createAppointmentAction} className="flex flex-col gap-3">
-                  <input type="hidden" name="barbershopId" value={barbershop.id} />
-                  <input type="hidden" name="staffId" value={selectedSlot.staffId} />
-                  <input type="hidden" name="serviceId" value={selectedService.id} />
-                  <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
-                  <Button type="submit" size="lg">
-                    Confirmar agendamento
-                  </Button>
-                </form>
-              ) : sp.sent === "1" ? (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
-                    <IconWhatsapp className="size-5 shrink-0 text-emerald-600" />
-                    <p>
-                      Enviamos um link de acesso pro WhatsApp{" "}
-                      <span className="font-medium">{formatPhoneDisplay(sp.phone ?? "")}</span>.
-                      Abra o WhatsApp e toque no link pra continuar.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <form action={requestMagicLinkAction}>
-                      <input type="hidden" name="barbershopId" value={barbershop.id} />
-                      <input type="hidden" name="staffId" value={selectedSlot.staffId} />
-                      <input type="hidden" name="serviceId" value={selectedService.id} />
-                      <input type="hidden" name="date" value={sp.date ?? ""} />
-                      <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
-                      <input type="hidden" name="name" value={sp.name ?? ""} />
-                      <input type="hidden" name="phone" value={sp.phone ?? ""} />
-                      <button type="submit" className="text-muted-foreground underline hover:text-foreground">
-                        Reenviar link
-                      </button>
-                    </form>
-                    <span className="text-border">·</span>
-                    <Link
-                      href={buildLink(barbershop.id, {
-                        serviceId: sp.serviceId,
-                        staffId: selectedSlot.staffId,
-                        date: sp.date,
-                        slot: selectedSlot.start.toISOString(),
-                      })}
-                      className="text-muted-foreground underline hover:text-foreground"
-                    >
-                      Número errado? Trocar
-                    </Link>
-                  </div>
-                </div>
-              ) : sp.name && sp.phone ? (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3 rounded-lg bg-secondary/60 p-3 text-sm">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <IconWhatsapp className="size-4" />
-                    </span>
-                    <div>
-                      <p className="text-muted-foreground">Enviaremos o link de acesso para:</p>
-                      <p className="font-medium">{formatPhoneDisplay(sp.phone)}</p>
+              <form action={createAppointmentAction} className="flex flex-col gap-3">
+                <input type="hidden" name="barbershopId" value={barbershop.id} />
+                <input type="hidden" name="staffId" value={selectedSlot.staffId} />
+                <input type="hidden" name="serviceId" value={selectedService.id} />
+                <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
+
+                {!session?.user && (
+                  <>
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="name" className="text-sm font-medium">
+                        Nome
+                      </label>
+                      <Input id="name" name="name" required defaultValue={sp.name} />
                     </div>
-                  </div>
-                  <form action={requestMagicLinkAction} className="flex items-center gap-3">
-                    <input type="hidden" name="barbershopId" value={barbershop.id} />
-                    <input type="hidden" name="staffId" value={selectedSlot.staffId} />
-                    <input type="hidden" name="serviceId" value={selectedService.id} />
-                    <input type="hidden" name="date" value={sp.date ?? ""} />
-                    <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
-                    <input type="hidden" name="name" value={sp.name} />
-                    <input type="hidden" name="phone" value={sp.phone} />
-                    <Button type="submit">Enviar link de acesso</Button>
-                    <Link
-                      href={buildLink(barbershop.id, {
-                        serviceId: sp.serviceId,
-                        staffId: selectedSlot.staffId,
-                        date: sp.date,
-                        slot: selectedSlot.start.toISOString(),
-                      })}
-                      className="text-sm text-muted-foreground underline hover:text-foreground"
-                    >
-                      Corrigir
-                    </Link>
-                  </form>
-                </div>
-              ) : (
-                <form method="GET" className="flex flex-col gap-3">
-                  <input type="hidden" name="serviceId" value={sp.serviceId} />
-                  <input type="hidden" name="staffId" value={selectedSlot.staffId} />
-                  <input type="hidden" name="date" value={sp.date} />
-                  <input type="hidden" name="slot" value={selectedSlot.start.toISOString()} />
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="name" className="text-sm font-medium">
-                      Nome
-                    </label>
-                    <Input id="name" name="name" required defaultValue={sp.name} />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="phone" className="flex items-center gap-1.5 text-sm font-medium">
-                      <IconWhatsapp className="size-4 text-emerald-600" />
-                      Telefone (WhatsApp)
-                    </label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      required
-                      defaultValue={sp.phone}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <Button type="submit">Continuar</Button>
-                </form>
-              )}
+                    <div className="flex flex-col gap-1.5">
+                      <label htmlFor="phone" className="flex items-center gap-1.5 text-sm font-medium">
+                        <IconWhatsapp className="size-4 text-emerald-600" />
+                        Telefone (WhatsApp)
+                      </label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        required
+                        defaultValue={sp.phone}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <Button type="submit" size="lg">
+                  Confirmar agendamento
+                </Button>
+              </form>
             </div>
           </Card>
         )}
