@@ -13,8 +13,10 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 </div>
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,prisma,postgres,supabase,vercel" />
+</p>
 
----
 
 ## O que é
 
