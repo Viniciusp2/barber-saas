@@ -113,8 +113,8 @@
     radial-gradient(1000px circle at 15% -10%, rgba(217, 70, 239, 0.18), transparent 60%),
     radial-gradient(900px circle at 100% 100%, rgba(34, 211, 238, 0.15), transparent 60%);
 
-  --theme-font-display: var(--font-orbitron);
-  --theme-font-sans: var(--font-rajdhani);
+  --theme-font-display: var(--font-exo2);
+  --theme-font-sans: var(--font-exo2);
 }
 
 /**

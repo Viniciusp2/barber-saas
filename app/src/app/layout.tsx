@@ -4,8 +4,7 @@ import {
   Geist_Mono,
   Fraunces,
   Space_Grotesk,
-  Orbitron,
-  Rajdhani,
+  Exo_2,
   Quicksand,
 } from "next/font/google";
 import Script from "next/script";
@@ -35,17 +34,11 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["500", "600", "700"],
 });
 
-// Tema "Neon": títulos estilo cyberpunk/tech + corpo de texto condizente.
-const orbitron = Orbitron({
-  variable: "--font-orbitron",
+// Tema "Neon": sci-fi legível, para título e corpo de texto.
+const exo2 = Exo_2({
+  variable: "--font-exo2",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
-});
-
-const rajdhani = Rajdhani({
-  variable: "--font-rajdhani",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
 });
 
 // Tema "Pastel": títulos arredondados e amigáveis.
@@ -68,7 +61,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${orbitron.variable} ${rajdhani.variable} ${quicksand.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${exo2.variable} ${quicksand.variable}`}
     >
       <body className="antialiased">
         <Script id="theme-init" strategy="beforeInteractive">
