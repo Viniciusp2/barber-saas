@@ -66,10 +66,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${orbitron.variable} ${rajdhani.variable} ${quicksand.variable} antialiased`}
-      >
+    <html
+      lang="pt-BR"
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${orbitron.variable} ${rajdhani.variable} ${quicksand.variable}`}
+    >
+      <body className="antialiased">
         <Script id="theme-init" strategy="beforeInteractive">
           {`(function(){try{var t=localStorage.getItem('barber-saas-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`}
         </Script>
