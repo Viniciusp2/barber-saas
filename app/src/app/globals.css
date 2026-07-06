@@ -31,6 +31,9 @@
   --gradient-brand: linear-gradient(135deg, #a3540f 0%, #c96f1f 100%);
   --shadow-brand: none;
   --bg-decoration: none;
+
+  --theme-font-sans: var(--font-geist-sans);
+  --theme-font-display: var(--font-fraunces);
 }
 
 /**
@@ -68,6 +71,8 @@
   --bg-decoration:
     radial-gradient(1200px circle at 100% -10%, rgba(99, 102, 241, 0.12), transparent 60%),
     radial-gradient(800px circle at -10% 110%, rgba(236, 72, 153, 0.1), transparent 60%);
+
+  --theme-font-display: var(--font-space-grotesk);
 }
 
 /**
@@ -107,6 +112,9 @@
   --bg-decoration:
     radial-gradient(1000px circle at 15% -10%, rgba(217, 70, 239, 0.18), transparent 60%),
     radial-gradient(900px circle at 100% 100%, rgba(34, 211, 238, 0.15), transparent 60%);
+
+  --theme-font-display: var(--font-orbitron);
+  --theme-font-sans: var(--font-rajdhani);
 }
 
 /**
@@ -143,6 +151,8 @@
   --bg-decoration:
     radial-gradient(900px circle at 100% -10%, rgba(244, 114, 182, 0.15), transparent 60%),
     radial-gradient(900px circle at -10% 100%, rgba(196, 181, 253, 0.18), transparent 60%);
+
+  --theme-font-display: var(--font-quicksand);
 }
 
 @keyframes fade-in-up {
@@ -299,16 +309,17 @@
   --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-active: var(--sidebar-active);
 
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--theme-font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-fraunces);
+  --font-display: var(--theme-font-display);
 }
 
 body {
   background-color: var(--background);
   background-image: var(--bg-decoration);
   color: var(--foreground);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease, font-family 0.2s ease;
 }
 
 .bg-gradient-brand {
