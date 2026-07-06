@@ -1,279 +1,180 @@
+<div align="center">
+
 # 💈 BarberSaaS
 
-> Plataforma SaaS moderna para gestão de barbearias, desenvolvida com **Next.js**, **React**, **TypeScript**, **Prisma** e **PostgreSQL**, oferecendo uma experiência completa para proprietários e clientes.
+**Agendamento online e gestão completa para barbearias**, em uma plataforma multi-tenant onde cada barbearia tem sua própria página pública, equipe, serviços e agenda — isolados uns dos outros.
 
-O BarberSaaS foi projetado com foco em **escalabilidade**, **segurança** e **experiência do usuário**, permitindo que cada barbearia gerencie seus serviços, equipe e agendamentos em um ambiente isolado (arquitetura **multi-tenant**).
-
-![Next.js](https://img.shields.io/badge/Next.js-16-black)
-![React](https://img.shields.io/badge/React-19-61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)
-![Prisma](https://img.shields.io/badge/Prisma-7-2D3748)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?logo=postgresql&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
----
 
-## ✨ Principais funcionalidades
-
-### 👤 Gestão da Barbearia
-- Autenticação com Google (Auth.js)
-- Onboarding automático para novas barbearias
-- Dashboard administrativo
-- Controle de permissões por papéis (OWNER, USER e ADMIN)
-- Configurações da barbearia
-
-### ✂️ Gestão Operacional
-- Cadastro de serviços
-- Cadastro da equipe
-- CRUD completo utilizando Server Actions
-- Validação com Zod
-- Arquitetura Multi-Tenant
-
-### 📅 Agendamentos *(Em desenvolvimento)*
-- Portal público para clientes
-- Escolha de barbeiro e serviço
-- Seleção de horários disponíveis
-- Reagendamento e cancelamento
-- Login simplificado via telefone + código de verificação
-
-### 📲 Comunicação *(Planejado)*
-- Confirmação automática de agendamento
-- Lembretes por WhatsApp
-- Notificações por e-mail
-
-### 💳 Monetização *(Planejado)*
-- Assinaturas mensais do SaaS
-- Integração com Stripe
-- Integração com Mercado Pago
-
-### 🚀 Futuras funcionalidades
-- Programa de fidelidade
-- Loja de produtos da barbearia
-- Galeria de cortes realizados
-- Página pública personalizada da barbearia
-- IA para automação de atendimento
-- Assistente inteligente para agendamentos
+</div>
 
 ---
 
-# 🛠️ Tecnologias
+## O que é
 
-## Front-end
+O BarberSaaS resolve dois problemas ao mesmo tempo:
 
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS
+- **Para o dono da barbearia**: um painel para cadastrar serviços, equipe, horários de funcionamento e acompanhar a agenda do dia, sem depender de agenda de papel ou grupo de WhatsApp.
+- **Para o cliente final**: uma página pública de agendamento (sem precisar instalar app ou criar conta) onde escolhe serviço, barbeiro, data e horário disponível, e recebe a confirmação na hora.
 
-## Back-end
-
-- Auth.js (NextAuth v5)
-- Prisma ORM
-- PostgreSQL
-- Zod
-- Server Actions
-
-## Infraestrutura
-
-- Docker
-- Docker Compose
-- Supabase (PostgreSQL)
-- Google OAuth
+Cada barbearia cadastrada vira um **tenant isolado**: seus próprios serviços, sua própria equipe, seus próprios clientes e agenda — tudo na mesma aplicação, sem vazar dado de uma barbearia pra outra.
 
 ---
 
-# 🏗️ Arquitetura
+## 🎨 Temas visuais
 
-O projeto segue uma arquitetura moderna baseada em:
+Além de customizar cores por marca, a aplicação vem com **4 temas prontos**, trocáveis a qualquer momento (dashboard e página pública) por um seletor no canto da tela — a escolha fica salva no navegador do usuário. Cada tema tem sua própria paleta, tipografia e nível de "vida" (gradientes, brilho, animações):
 
-- Multi-Tenant
-- App Router
-- Server Actions
-- Prisma ORM
-- Autenticação JWT
-- Componentes reutilizáveis
-- Boas práticas de Clean Code
+| Clássico | Moderno |
+|---|---|
+| ![Tema Clássico](docs/img/theme-classic.png) | ![Tema Moderno](docs/img/theme-modern.png) |
+| Serifada (Fraunces) + tons terrosos — a identidade padrão da marca. | Space Grotesk + neutros frios, com acentos em degradê indigo→rosa. |
+
+| Neon | Pastel |
+|---|---|
+| ![Tema Neon](docs/img/theme-neon.png) | ![Tema Pastel](docs/img/theme-pastel.png) |
+| Exo 2, fundo escuro e botões com brilho (glow) ciano/magenta. | Quicksand, tons suaves de rosa e lavanda. |
 
 ---
 
-# 📂 Estrutura do projeto
+## ✨ Funcionalidades
+
+### Painel do dono (`/dashboard`)
+- Login com Google ou e-mail/senha, com onboarding automático (criar a barbearia já promove o usuário a `OWNER`)
+- Visão geral com faturamento do mês, gráfico dos últimos 7 dias e agenda do dia
+- CRUD completo de **serviços** e **equipe**
+- Bloqueios de horário por barbeiro (folga, chegar mais tarde, sair mais cedo, almoço estendido)
+- Configurações da barbearia (endereço, WhatsApp de contato, confirmação automática de agendamento)
+- Botão de compartilhar o link público da barbearia
+
+### Página pública de agendamento (`/barbearia/[id]`)
+- Fluxo em 3 passos: serviço + barbeiro → horário disponível → confirmação
+- Disponibilidade calculada em tempo real (respeita horário de funcionamento, folgas, bloqueios e conflitos com outros agendamentos)
+- Checkout de convidado: só pede nome e telefone — sem necessidade de criar conta
+- Página de confirmação com opção de adicionar ao Google Calendar, ver rota no mapa, remarcar ou cancelar
+
+<p align="center">
+  <img src="docs/img/booking-confirmacao.png" width="420" alt="Página de confirmação de agendamento" />
+</p>
+
+### Dashboard em ação
+
+<p align="center">
+  <img src="docs/img/dashboard-overview.png" alt="Visão geral do dashboard" />
+</p>
+
+---
+
+## 🛠️ Stack
+
+| Camada | Tecnologias |
+|---|---|
+| **Front-end** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| **Back-end** | NextAuth v5 (beta), Prisma 7 (driver adapters), Zod, Server Actions |
+| **Banco de dados** | PostgreSQL (Supabase, via connection pooler) |
+| **Infraestrutura** | Vercel, Google OAuth |
+
+### Decisões de arquitetura
+- **Multi-tenant** desde o schema: toda entidade operacional pertence a uma `Barbershop`
+- **App Router + Server Actions**: CRUDs e o fluxo de agendamento não dependem de API routes separadas
+- **Sem JavaScript client-side pesado na página pública**: o fluxo de agendamento é `<form>` GET/POST + Server Actions + redirects, com estado guardado em query params — funciona até com JS desabilitado
+- **Sessão via JWT** (Auth.js), sem sessão em banco
+
+---
+
+## 📂 Estrutura do projeto
 
 ```text
-src/
-├── app/
-├── actions/
-├── components/
-├── lib/
-├── schemas/
-├── services/
-├── auth.ts
-├── proxy.ts
-
-prisma/
-├── schema.prisma
-
-public/
-
-Dockerfile
-docker-compose.yml
+app/
+├── src/
+│   ├── app/
+│   │   ├── dashboard/          # painel do dono (CRUD, configurações, visão geral)
+│   │   ├── barbearia/[id]/     # página pública de agendamento
+│   │   ├── agendamento/[id]/   # confirmação/gestão de um agendamento
+│   │   ├── login/ cadastro/ onboarding/
+│   │   └── api/
+│   ├── components/
+│   │   ├── dashboard/          # sidebar, header, gráficos
+│   │   └── ui/                 # Button, Card, Input, Table...
+│   ├── lib/                     # prisma client, disponibilidade, autenticação por telefone
+│   ├── auth.ts / auth.config.ts
+│   └── middleware.ts
+├── prisma/
+│   └── schema.prisma
+└── public/
 ```
 
 ---
 
-# 🚀 Executando o projeto
+## 🚀 Rodando localmente
 
-## 1. Clone o repositório
+### Pré-requisitos
+- Node.js 20+
+- Um banco PostgreSQL (local, Docker ou Supabase)
+
+### Passo a passo
 
 ```bash
 git clone https://github.com/Viniciusp2/barber-saas.git
-```
-
-```bash
-cd barber-saas
-```
-
----
-
-## 2. Instale as dependências
-
-```bash
+cd barber-saas/app
 npm install
 ```
 
----
-
-## 3. Configure as variáveis de ambiente
-
-Crie um arquivo `.env` baseado em `.env.example`.
-
-Exemplo:
+Crie um `.env` a partir do `.env.example`:
 
 ```env
-DATABASE_URL=
-DIRECT_URL=
+TZ="America/Sao_Paulo"
 
-AUTH_SECRET=
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/barber?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/barber?schema=public"
 
-AUTH_GOOGLE_ID=
-AUTH_GOOGLE_SECRET=
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="coloque_uma_chave_segura_aqui"
+
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
 ```
 
----
-
-## 4. Execute as migrations
+Aplique as migrations e suba o projeto:
 
 ```bash
 npx prisma migrate dev
-```
-
----
-
-## 5. Inicie o projeto
-
-```bash
 npm run dev
 ```
 
-Acesse:
-
-```
-http://localhost:3000
-```
+Acesse **http://localhost:3000**.
 
 ---
 
-# 📈 Roadmap
+## 📈 Roadmap
 
-## ✅ Concluído
+### ✅ Feito
+- Autenticação (Google + e-mail/senha), papéis e onboarding automático
+- Multi-tenant completo (Barbearia, Serviços, Equipe via Server Actions)
+- Motor de disponibilidade (horário de funcionamento, folgas, bloqueios, conflitos)
+- Fluxo público de agendamento ponta a ponta (escolha → horário → confirmação → remarcar/cancelar)
+- Sistema de temas visuais (4 temas, com fontes e paletas próprias)
 
-- [x] Estrutura inicial
-- [x] Auth.js + Google OAuth
-- [x] Onboarding automático
-- [x] Dashboard
-- [x] CRUD de Serviços
-- [x] CRUD da Equipe
-- [x] Configurações da Barbearia
-- [x] Multi-Tenant
-- [x] Server Actions
-- [x] Prisma + PostgreSQL
-
----
-
-## 🚧 Em desenvolvimento
-
-- [ ] Sistema de Agendamentos
-- [ ] Portal Público do Cliente
-- [ ] Gestão de Clientes
-- [ ] Calendário
-- [ ] Horários disponíveis
+### 🚧 Próximos passos
+- Notificações automáticas (WhatsApp / e-mail) de confirmação e lembrete
+- Pagamentos (Stripe / Mercado Pago) e assinatura do SaaS
+- Loja de produtos, programa de fidelidade, galeria de cortes
+- Relatórios e assistente de atendimento com IA
 
 ---
 
-## 📌 Próximas versões
+## 📄 Licença
 
-- [ ] WhatsApp
-- [ ] Notificações por e-mail
-- [ ] Pagamentos
-- [ ] Loja
-- [ ] Programa de fidelidade
-- [ ] Galeria de cortes
-- [ ] IA para atendimento
-- [ ] Aplicativo Mobile
+Distribuído sob a licença **MIT**. Veja [LICENSE](LICENSE) para mais detalhes.
 
----
-
-# 📸 Screenshots
-
-# 📸 Screenshots
-
-## 🏠 Landing Page
-
-![Landing](docs/img/01-landing.png)
-
----
-
-## 📊 Dashboard
-
-![Dashboard](./docs/img/e2e-07-dashboard-final.png)
-
----
-
-## 📅 Agendamento Online
-
-![Booking](docs/img/booking-01-pagina-publica.png)
-
----
-
-## 🕒 Escolha de Horário
-
-![Horários](docs/img/booking-02-horarios.png)
-
----
-
-## ✂️ Gestão de Serviços
-
-![Serviços](docs/img/e2e-03-servicos-lista.png)
-
----
-
-## 👥 Gestão da Equipe
-
-![Equipe](docs/img/e2e-05-equipe-lista.png)
-
----
-
-## ⚙️ Configurações
-
-![Configurações](docs/img/e2e-06-configuracoes.png)
----
-
-# 📄 Licença
-
-Este projeto está licenciado sob a **MIT License**.
-
----
-
-# 👨‍💻 Autor
+## 👨‍💻 Autor
 
 Desenvolvido por **Vinicius Ribas**.
 
-Caso queira contribuir ou sugerir melhorias, fique à vontade para abrir uma **Issue** ou enviar um **Pull Request**.
+Sugestões e contribuições são bem-vindas — abra uma **Issue** ou envie um **Pull Request**.
